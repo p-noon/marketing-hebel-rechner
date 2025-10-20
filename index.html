@@ -27,7 +27,7 @@
   .delta.negative{color:#d70015}
   .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
   .slider-wrapper{position:relative;margin-top:50px;margin-bottom:40px} 
-  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap;cursor:text}
+  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap}
   input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer}
   footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
   footer a{color:#0071e3;text-decoration:none}
@@ -86,12 +86,12 @@
 
       <div class="slider-wrapper">
         <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
-        <div id="receiptValue" class="slider-value" contenteditable="true"></div>
+        <div id="receiptValue" class="slider-value"></div>
       </div>
 
       <div class="slider-wrapper">
         <input id="sliderCr" type="range" min="0" max="10" step="0.01">
-        <div id="crValue" class="slider-value" contenteditable="true"></div>
+        <div id="crValue" class="slider-value"></div>
       </div>
 
       <!-- Neue Werte: Umsatz, Gewinn, ROAS -->
@@ -160,10 +160,8 @@ function calcBase(){
   if(!rec.dataset.initialized){rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.initialized=true;}
   if(!crs.dataset.initialized){crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.initialized=true;}
 
-  const receiptValue = document.getElementById("receiptValue");
-  const crValue = document.getElementById("crValue");
-  receiptValue.textContent = fmt(gross);
-  crValue.textContent = fmt(crPct);
+  document.getElementById("receiptValue").textContent=fmt(gross);
+  document.getElementById("crValue").textContent=fmt(crPct);
 
   updateScenario();
 }
@@ -172,21 +170,12 @@ function updateScenario(){
   if(!base)return;
   const recSlider=document.getElementById("sliderReceipt");
   const crSlider=document.getElementById("sliderCr");
-  const receiptValue = document.getElementById("receiptValue");
-  const crValue = document.getElementById("crValue");
-
-  // Editable Text Werte übernehmen
-  let newGross=parseFloat(receiptValue.textContent.replace(/[^0-9,.]/g,""))||0;
-  let newCrPct=parseFloat(crValue.textContent.replace(/[^0-9,.]/g,""))||0;
-
-  // Slider synchronisieren
-  recSlider.value=newGross;
-  crSlider.value=newCrPct;
-
+  const newGross=+recSlider.value||0;
+  const newCrPct=+crSlider.value||0;
   const newCr=newCrPct/100;
 
-  receiptValue.textContent=""+fmt(newGross);
-  crValue.textContent=""+fmt(newCrPct);
+  document.getElementById("receiptValue").textContent=""+fmt(newGross);
+  document.getElementById("crValue").textContent=""+fmt(newCrPct);
 
   const newProd=base.prod*(newGross/(base.gross||1));
   const vis=base.visitors;
@@ -221,14 +210,6 @@ document.getElementById("calcButton").addEventListener("click",calcBase);
 document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
 document.getElementById("revenueGross").addEventListener("input",updateNet);
-
-// Editable Werte per Enter / Fokusverlust übernehmen
-const editableValues = [document.getElementById("receiptValue"), document.getElementById("crValue")];
-editableValues.forEach(el=>{
-  el.addEventListener("input", updateScenario);
-  el.addEventListener("keypress", e=>{if(e.key==="Enter") e.preventDefault(); updateScenario();});
-  el.addEventListener("blur", updateScenario);
-});
 
 // Embed Overlay
 document.getElementById("embedLink").addEventListener("click",e=>{e.preventDefault();alert('Embed-Code wie zuvor: <iframe src="https://p-noon.github.io/scenario-simulator" width="100%" height="950" style="border:none;"></iframe>')});
