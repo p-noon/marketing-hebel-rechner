@@ -17,18 +17,20 @@
   .button-main{margin-top:22px;width:100%;background:#0071e3;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
   .button-main:hover{background:#0a84ff}
   .results{margin-top:26px;display:none}
-  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
   .result-card{background:#f6f7fb;padding:14px;border-radius:12px;text-align:center}
   .result-card h1{margin:8px 0;font-size:1.6rem;color:#0071e3}
   .result-card.alt h1{color:#333}
   .helper{font-size:0.88rem;color:#666;margin-top:8px}
+  .delta{font-size:0.85rem;margin-top:4px}
+  .delta.positive{color:#0a8f00}
+  .delta.negative{color:#d70015}
   .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
-  .slider-wrapper{position:relative;margin-top:40px} /* mehr Abstand zwischen Slidern */
-  .slider-value{position:absolute;top:-32px;transform:translateX(-50%);font-weight:700;color:#0071e3;pointer-events:none;white-space:nowrap}
+  .slider-wrapper{position:relative;margin-top:50px;margin-bottom:40px} 
+  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap}
   input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer}
   footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
   footer a{color:#0071e3;text-decoration:none}
-  .tiny{font-size:0.85rem;color:#666;margin-top:6px}
 </style>
 </head>
 <body>
@@ -82,6 +84,10 @@
         <p>Gewinn (Ist)</p>
         <h1 id="totalProfit">–</h1>
       </div>
+      <div class="result-card">
+        <p>ROAS (Ist)</p>
+        <h1 id="totalRoas">–</h1>
+      </div>
     </div>
 
     <div class="slider-section" id="scenarioSection">
@@ -101,12 +107,17 @@
         <div class="result-card">
           <p>Neuer Umsatz (Brutto)</p>
           <h1 id="newRevenue">–</h1>
+          <div id="deltaRevenue" class="delta"></div>
         </div>
         <div class="result-card alt">
           <p>Neuer Gewinn</p>
           <h1 id="newProfit">–</h1>
-          <div class="helper" id="deltaDisplay"></div>
-          <div class="helper" id="newRoasDisplay"></div>
+          <div id="deltaProfit" class="delta"></div>
+        </div>
+        <div class="result-card">
+          <p>Neuer ROAS</p>
+          <h1 id="newRoas">–</h1>
+          <div id="deltaRoas" class="delta"></div>
         </div>
       </div>
     </div>
@@ -116,15 +127,6 @@
     <a href="#" id="embedLink"><strong>🔗 Rechner einbetten / teilen</strong></a> – entwickelt von 
     <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a>
   </footer>
-</div>
-
-<!-- Overlay für Einbettung -->
-<div class="overlay" id="overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:999">
-  <div class="overlay-content" style="background:white;padding:24px;border-radius:16px;width:90%;max-width:600px;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
-    <h3>Einbettungscode:</h3>
-    <textarea readonly style="width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px"><iframe src="https://p-noon.github.io/scenario-simulator" width="100%" height="950" style="border:none;"></iframe></textarea>
-    <button class="close-btn" onclick="document.getElementById('overlay').style.display='none'" style="background:#0071e3;color:white;border:none;padding:8px 16px;border-radius:8px;margin-top:12px;cursor:pointer">Schließen</button>
-  </div>
 </div>
 
 <script>
@@ -156,6 +158,7 @@ function calcBase(){
 
   document.getElementById("totalRevenue").textContent=fmt(totalRevenue)+" €";
   document.getElementById("totalProfit").textContent=fmt(totalProfit)+" €";
+  document.getElementById("totalRoas").textContent=fmt(roas);
   document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+fmt(visitors);
 
   document.getElementById("results").style.display="block";
@@ -180,12 +183,6 @@ function updateScenario(){
   const recVal=document.getElementById("receiptValue");
   const crVal=document.getElementById("crValue");
 
-  // Slider-Label mittig zum Punkt positionieren
-  const recPercent=(newGross-recSlider.min)/(recSlider.max-recSlider.min);
-  const crPercent=(newCrPct-crSlider.min)/(crSlider.max-crSlider.min);
-  recVal.style.left=`calc(${recPercent*100}%)`;
-  crVal.style.left=`calc(${crPercent*100}%)`;
-
   recVal.textContent="Neuer Kassenzettel: "+fmt(newGross)+" €";
   crVal.textContent="Neue CR: "+fmt(newCrPct)+" %";
 
@@ -200,8 +197,21 @@ function updateScenario(){
 
   document.getElementById("newRevenue").textContent=fmt(newRevenue)+" €";
   document.getElementById("newProfit").textContent=fmt(newProfit)+" €";
-  document.getElementById("deltaDisplay").textContent="Δ Gewinn vs Ist: "+fmt(newProfit-base.totalProfit)+" €";
-  document.getElementById("newRoasDisplay").textContent="Neuer ROAS: "+fmt(newRoas);
+  document.getElementById("newRoas").textContent=fmt(newRoas);
+
+  // Deltas
+  const deltaRev=document.getElementById("deltaRevenue");
+  const deltaProf=document.getElementById("deltaProfit");
+  const deltaRoas=document.getElementById("deltaRoas");
+
+  deltaRev.textContent=(newRevenue-base.totalRevenue>=0?"+":"")+fmt(newRevenue-base.totalRevenue)+" €";
+  deltaProf.textContent=(newProfit-base.totalProfit>=0?"+":"")+fmt(newProfit-base.totalProfit)+" €";
+  deltaRoas.textContent=(newRoas-base.roas>=0?"+":"")+fmt(newRoas-base.roas);
+
+  deltaRev.className="delta "+(newRevenue-base.totalRevenue>=0?"positive":"negative");
+  deltaProf.className="delta "+(newProfit-base.totalProfit>=0?"positive":"negative");
+  deltaRoas.className="delta "+(newRoas-base.roas>=0?"positive":"negative");
+
   document.getElementById("newProfit").style.color=newProfit<0?"#d70015":"#0071e3";
 }
 
@@ -210,8 +220,8 @@ document.getElementById("sliderReceipt").addEventListener("input",updateScenario
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
 document.getElementById("revenueGross").addEventListener("input",updateNet);
 
-// Embed Overlay
-document.getElementById("embedLink").addEventListener("click",e=>{e.preventDefault();document.getElementById("overlay").style.display="flex"});
+// Embed Overlay (wie bisher)
+document.getElementById("embedLink").addEventListener("click",e=>{e.preventDefault();alert('Embed-Code wie zuvor: <iframe src="https://p-noon.github.io/scenario-simulator" width="100%" height="950" style="border:none;"></iframe>')});
 </script>
 </body>
 </html>
