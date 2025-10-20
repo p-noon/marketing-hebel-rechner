@@ -84,7 +84,7 @@ input:focus {
 }
 .result-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 .result-card {
@@ -165,6 +165,10 @@ footer a {
         <p><strong>Gewinn gesamt</strong></p>
         <h1 id="totalProfit">–</h1>
       </div>
+      <div class="result-card">
+        <p><strong>ROAS</strong></p>
+        <h1 id="totalRoas">–</h1>
+      </div>
     </div>
 
     <div class="slider-section" id="sliderSection" style="display:none;">
@@ -188,6 +192,10 @@ footer a {
         <div class="result-card">
           <p><strong>Neuer Gewinn</strong></p>
           <h1 id="newProfit">–</h1>
+        </div>
+        <div class="result-card">
+          <p><strong>Neuer ROAS</strong></p>
+          <h1 id="newRoas">–</h1>
         </div>
       </div>
     </div>
@@ -220,15 +228,15 @@ function calcScenario() {
   const roas = +document.getElementById("roas").value || 0;
   const budget = +document.getElementById("budget").value || 0;
 
-  const totalRevenue = roas * budget;
-  const avgOrders = totalRevenue / gross; // Anzahl Bestellungen
-  const profitPerOrder = net - production - shipping;
-  const totalProfit = totalRevenue / roas * (roas - 1) * (profitPerOrder / (gross / 1.19));
+  const totalRevenue = budget * roas;
+  const totalProfit = totalRevenue - budget - (totalRevenue / gross) * (production + shipping);
+  const totalRoas = totalRevenue / budget;
 
-  base = { gross, net, production, shipping, cr, roas, budget, totalRevenue, totalProfit };
+  base = { gross, net, production, shipping, cr, roas, budget, totalRevenue, totalProfit, totalRoas };
 
   document.getElementById("totalRevenue").innerText = formatNumber(totalRevenue) + " €";
   document.getElementById("totalProfit").innerText = formatNumber(totalProfit) + " €";
+  document.getElementById("totalRoas").innerText = formatNumber(totalRoas);
 
   document.getElementById("results").style.display = "block";
   document.getElementById("sliderSection").style.display = "block";
@@ -243,24 +251,23 @@ function updateScenario() {
 
   if (!base.gross) return;
 
-  // Kassenzettel-Anpassung
   const newGross = base.gross * (1 + receiptChange / 100);
   const newNet = newGross / 1.19;
   const newProduction = base.production * (1 + receiptChange / 100);
   const newShipping = base.shipping;
 
-  // Besucheranzahl aus Ist-CR berechnen
-  const visitors = (base.totalRevenue / base.gross) / base.cr;
   const newCr = base.cr * (1 + crChange / 100);
-
-  // Neuer Umsatz & Gewinn
+  const visitors = (base.totalRevenue / base.gross) / base.cr;
   const newOrders = visitors * newCr;
   const newRevenue = newOrders * newGross;
+
   const profitPerOrder = newNet - newProduction - newShipping;
   const newProfit = newOrders * profitPerOrder - base.budget;
+  const newRoas = newRevenue / base.budget;
 
   document.getElementById("newRevenue").innerText = formatNumber(newRevenue) + " €";
   document.getElementById("newProfit").innerText = formatNumber(newProfit) + " €";
+  document.getElementById("newRoas").innerText = formatNumber(newRoas);
 }
 </script>
 
