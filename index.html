@@ -26,10 +26,10 @@
   .delta.positive{color:#0a8f00}
   .delta.negative{color:#d70015}
   .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
-  .slider-wrapper{position:relative;margin-top:50px;margin-bottom:40px}
-  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap}
-  .slider-label{text-align:center;font-size:0.95rem;color:#555;margin-bottom:8px;font-weight:500}
-  input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer}
+  .slider-wrapper{position:relative;margin-top:40px;margin-bottom:40px;text-align:center}
+  .slider-label-inline{font-weight:600;color:#0071e3;font-size:1rem}
+  .slider-value{display:inline-block;margin-left:6px;font-weight:700;color:#0071e3;white-space:nowrap}
+  input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer;margin-top:8px}
   footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
   footer a{color:#0071e3;text-decoration:none}
 </style>
@@ -85,18 +85,21 @@
     <div class="slider-section" id="scenarioSection">
       <h3>Szenario anpassen</h3>
 
+      <!-- Kassenzettel -->
       <div class="slider-wrapper">
-        <div class="slider-label">Kassenzettel (Brutto)</div>
+        <span class="slider-label-inline">Neuer Kassenzettel:</span>
+        <span id="receiptValue" class="slider-value"></span>
         <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
-        <div id="receiptValue" class="slider-value"></div>
       </div>
 
+      <!-- Conversion Rate -->
       <div class="slider-wrapper">
-        <div class="slider-label">Conversion Rate (%)</div>
+        <span class="slider-label-inline">Neue CR:</span>
+        <span id="crValue" class="slider-value"></span>
         <input id="sliderCr" type="range" min="0" max="10" step="0.01">
-        <div id="crValue" class="slider-value"></div>
       </div>
 
+      <!-- Neue Werte -->
       <div class="result-grid" style="grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:20px;">
         <div class="result-card">
           <p>Neuer Umsatz (Brutto)</p>
@@ -129,6 +132,12 @@ function updateNet(){const gross=+document.getElementById("revenueGross").value|
 
 let base=null;
 
+function resetScenario(){
+  document.getElementById("results").style.display="none";
+  document.getElementById("scenarioSection").style.display="none";
+  base=null;
+}
+
 function calcBase(){
   const gross=+document.getElementById("revenueGross").value||0;
   const net=gross/1.19;
@@ -159,8 +168,8 @@ function calcBase(){
 
   const rec=document.getElementById("sliderReceipt");
   const crs=document.getElementById("sliderCr");
-  if(!rec.dataset.initialized){rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.initialized=true;}
-  if(!crs.dataset.initialized){crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.initialized=true;}
+  rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;
+  crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;
 
   document.getElementById("receiptValue").textContent=fmt(gross);
   document.getElementById("crValue").textContent=fmt(crPct);
@@ -176,8 +185,8 @@ function updateScenario(){
   const newCrPct=+crSlider.value||0;
   const newCr=newCrPct/100;
 
-  document.getElementById("receiptValue").textContent=fmt(newGross)+" €";
-  document.getElementById("crValue").textContent=fmt(newCrPct)+" %";
+  document.getElementById("receiptValue").textContent=fmt(newGross);
+  document.getElementById("crValue").textContent=fmt(newCrPct);
 
   const newProd=base.prod*(newGross/(base.gross||1));
   const vis=base.visitors;
@@ -211,6 +220,11 @@ function updateScenario(){
 document.getElementById("calcButton").addEventListener("click",calcBase);
 document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
+
+// Eingaben setzen Szenario zurück
+document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts')
+  .forEach(el=>el.addEventListener('input',resetScenario));
+
 document.getElementById("revenueGross").addEventListener("input",updateNet);
 
 // Embed Overlay
