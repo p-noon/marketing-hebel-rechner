@@ -168,8 +168,8 @@ function calcBase(){
 
   const rec=document.getElementById("sliderReceipt");
   const crs=document.getElementById("sliderCr");
-  rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;
-  crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;
+  rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.center=gross;
+  crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.center=crPct;
 
   document.getElementById("receiptValue").textContent=fmt(gross);
   document.getElementById("crValue").textContent=fmt(crPct);
@@ -220,6 +220,16 @@ function updateScenario(){
 document.getElementById("calcButton").addEventListener("click",calcBase);
 document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
+
+// Doppelklick auf Slider = Reset auf Mitte
+document.querySelectorAll('input[type="range"]').forEach(slider=>{
+  slider.addEventListener("dblclick",()=>{
+    if(slider.dataset.center){
+      slider.value=slider.dataset.center;
+      updateScenario();
+    }
+  });
+});
 
 // Eingaben setzen Szenario zurück
 document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts')
