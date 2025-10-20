@@ -17,22 +17,18 @@
   .button-main{margin-top:22px;width:100%;background:#0071e3;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
   .button-main:hover{background:#0a84ff}
   .results{margin-top:26px;display:none}
-  .result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .result-card{background:#f6f7fb;padding:14px;border-radius:12px;text-align:center}
   .result-card h1{margin:8px 0;font-size:1.6rem;color:#0071e3}
   .result-card.alt h1{color:#333}
   .helper{font-size:0.88rem;color:#666;margin-top:8px}
   .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
-  .slider-wrapper{position:relative;margin-top:24px;}
-  .slider-value{position:absolute;top:-28px;font-weight:700;color:#0071e3;pointer-events:none;}
+  .slider-wrapper{position:relative;margin-top:40px} /* mehr Abstand zwischen Slidern */
+  .slider-value{position:absolute;top:-32px;transform:translateX(-50%);font-weight:700;color:#0071e3;pointer-events:none;white-space:nowrap}
   input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer}
   footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
   footer a{color:#0071e3;text-decoration:none}
-  .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:999}
-  .overlay-content{background:white;padding:24px;border-radius:16px;width:90%;max-width:600px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
-  .overlay-content textarea{width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px}
-  .close-btn{background:#0071e3;color:white;border:none;padding:8px 16px;border-radius:8px;margin-top:12px;cursor:pointer}
-  .close-btn:hover{background:#0a84ff}
+  .tiny{font-size:0.85rem;color:#666;margin-top:6px}
 </style>
 </head>
 <body>
@@ -86,25 +82,19 @@
         <p>Gewinn (Ist)</p>
         <h1 id="totalProfit">–</h1>
       </div>
-      <div class="result-card">
-        <p>ROAS (Ist)</p>
-        <h1 id="totalRoas">–</h1>
-      </div>
     </div>
 
     <div class="slider-section" id="scenarioSection">
       <h3>Szenario anpassen</h3>
 
       <div class="slider-wrapper">
-        <label>Neuer Kassenzettel (Brutto €)</label>
         <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
-        <div id="receiptValue" class="slider-value">–</div>
+        <div id="receiptValue" class="slider-value"></div>
       </div>
 
       <div class="slider-wrapper">
-        <label>Neue Conversion Rate (%)</label>
         <input id="sliderCr" type="range" min="0" max="10" step="0.01">
-        <div id="crValue" class="slider-value">–</div>
+        <div id="crValue" class="slider-value"></div>
       </div>
 
       <div class="result-grid" style="margin-top:20px">
@@ -116,10 +106,7 @@
           <p>Neuer Gewinn</p>
           <h1 id="newProfit">–</h1>
           <div class="helper" id="deltaDisplay"></div>
-        </div>
-        <div class="result-card">
-          <p>Neuer ROAS</p>
-          <h1 id="newRoas">–</h1>
+          <div class="helper" id="newRoasDisplay"></div>
         </div>
       </div>
     </div>
@@ -131,22 +118,18 @@
   </footer>
 </div>
 
-<!-- Embed Overlay -->
-<div class="overlay" id="overlay">
-  <div class="overlay-content">
+<!-- Overlay für Einbettung -->
+<div class="overlay" id="overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:999">
+  <div class="overlay-content" style="background:white;padding:24px;border-radius:16px;width:90%;max-width:600px;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
     <h3>Einbettungscode:</h3>
-    <textarea readonly><iframe src="https://p-noon.github.io/roas-widget" width="100%" height="950" style="border:none;"></iframe></textarea>
-    <button class="close-btn" onclick="closeOverlay()">Schließen</button>
+    <textarea readonly style="width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px"><iframe src="https://p-noon.github.io/scenario-simulator" width="100%" height="950" style="border:none;"></iframe></textarea>
+    <button class="close-btn" onclick="document.getElementById('overlay').style.display='none'" style="background:#0071e3;color:white;border:none;padding:8px 16px;border-radius:8px;margin-top:12px;cursor:pointer">Schließen</button>
   </div>
 </div>
 
 <script>
 function fmt(num){return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}):"–";}
-
-function updateNet(){
-  const gross=+document.getElementById("revenueGross").value||0;
-  document.getElementById("revenueNet").value=gross?fmt(gross/1.19)+" €":"";
-}
+function updateNet(){const gross=+document.getElementById("revenueGross").value||0;document.getElementById("revenueNet").value=gross?fmt(gross/1.19)+" €":"";}
 
 let base=null;
 
@@ -173,7 +156,6 @@ function calcBase(){
 
   document.getElementById("totalRevenue").textContent=fmt(totalRevenue)+" €";
   document.getElementById("totalProfit").textContent=fmt(totalProfit)+" €";
-  document.getElementById("totalRoas").textContent=fmt(roas);
   document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+fmt(visitors);
 
   document.getElementById("results").style.display="block";
@@ -181,42 +163,31 @@ function calcBase(){
 
   const rec=document.getElementById("sliderReceipt");
   const crs=document.getElementById("sliderCr");
-  if(!rec.dataset.initialized){
-    rec.min=gross*0.5; rec.max=gross*1.5; rec.value=gross;
-    crs.min=Math.max(0,crPct*0.5); crs.max=crPct*1.5; crs.value=crPct;
-    rec.dataset.initialized=true;
-  }
+  if(!rec.dataset.initialized){rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.initialized=true;}
+  if(!crs.dataset.initialized){crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.initialized=true;}
 
-  updateScenario();
-}
-
-function resetSlider(id){
-  if(!base)return;
-  const el=document.getElementById(id);
-  if(id==="sliderReceipt") el.value=base.gross;
-  else el.value=base.crPct;
   updateScenario();
 }
 
 function updateScenario(){
   if(!base)return;
-  const newGross=+document.getElementById("sliderReceipt").value||0;
-  const newCrPct=+document.getElementById("sliderCr").value||0;
-  const newCr=newCrPct/100;
-
   const recSlider=document.getElementById("sliderReceipt");
   const crSlider=document.getElementById("sliderCr");
+  const newGross=+recSlider.value||0;
+  const newCrPct=+crSlider.value||0;
+  const newCr=newCrPct/100;
+
   const recVal=document.getElementById("receiptValue");
   const crVal=document.getElementById("crValue");
 
-  recVal.textContent=fmt(newGross)+" €";
-  crVal.textContent=fmt(newCrPct)+" %";
+  // Slider-Label mittig zum Punkt positionieren
+  const recPercent=(newGross-recSlider.min)/(recSlider.max-recSlider.min);
+  const crPercent=(newCrPct-crSlider.min)/(crSlider.max-crSlider.min);
+  recVal.style.left=`calc(${recPercent*100}%)`;
+  crVal.style.left=`calc(${crPercent*100}%)`;
 
-  const recPercent=(newGross - recSlider.min)/(recSlider.max - recSlider.min);
-  const crPercent=(newCrPct - crSlider.min)/(crSlider.max - crSlider.min);
-
-  recVal.style.left=`calc(${recPercent*100}% )`;
-  crVal.style.left=`calc(${crPercent*100}% )`;
+  recVal.textContent="Neuer Kassenzettel: "+fmt(newGross)+" €";
+  crVal.textContent="Neue CR: "+fmt(newCrPct)+" %";
 
   const newProd=base.prod*(newGross/(base.gross||1));
   const vis=base.visitors;
@@ -230,25 +201,17 @@ function updateScenario(){
   document.getElementById("newRevenue").textContent=fmt(newRevenue)+" €";
   document.getElementById("newProfit").textContent=fmt(newProfit)+" €";
   document.getElementById("deltaDisplay").textContent="Δ Gewinn vs Ist: "+fmt(newProfit-base.totalProfit)+" €";
-  document.getElementById("newRoas").textContent=fmt(newRoas);
+  document.getElementById("newRoasDisplay").textContent="Neuer ROAS: "+fmt(newRoas);
   document.getElementById("newProfit").style.color=newProfit<0?"#d70015":"#0071e3";
 }
 
 document.getElementById("calcButton").addEventListener("click",calcBase);
 document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
-document.getElementById("sliderReceipt").addEventListener("dblclick",()=>resetSlider("sliderReceipt"));
-document.getElementById("sliderCr").addEventListener("dblclick",()=>resetSlider("sliderCr"));
 document.getElementById("revenueGross").addEventListener("input",updateNet);
 
-document.getElementById("embedLink").addEventListener("click", e=>{
-  e.preventDefault();
-  document.getElementById("overlay").style.display="flex";
-});
-function closeOverlay(){document.getElementById("overlay").style.display="none";}
-
-// Initial
-updateNet();
+// Embed Overlay
+document.getElementById("embedLink").addEventListener("click",e=>{e.preventDefault();document.getElementById("overlay").style.display="flex"});
 </script>
 </body>
 </html>
