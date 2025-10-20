@@ -88,11 +88,11 @@
       <p class="tiny">Doppelklick auf Slider = Reset auf Ausgangswert</p>
 
       <label>Neuer Kassenzettel (Brutto €)</label>
-      <input id="sliderReceipt" type="range" min="0" max="200" step="0.1" value="100" ondblclick="resetSlider('sliderReceipt')" oninput="updateScenario()">
+      <input id="sliderReceipt" type="range" min="0" max="200" step="0.1" ondblclick="resetSlider('sliderReceipt')" oninput="updateScenario()">
       <div id="receiptValue" class="tiny"></div>
 
       <label>Neue Conversion Rate (%)</label>
-      <input id="sliderCr" type="range" min="0" max="10" step="0.01" value="2" ondblclick="resetSlider('sliderCr')" oninput="updateScenario()">
+      <input id="sliderCr" type="range" min="0" max="10" step="0.01" ondblclick="resetSlider('sliderCr')" oninput="updateScenario()">
       <div id="crValue" class="tiny"></div>
 
       <div class="result-grid" style="margin-top:20px">
@@ -110,69 +110,78 @@
     </div>
   </div>
 
-  <div style="margin-top:18px;text-align:center;">
-    <a href="#" id="embedLink" class="embed-inline">🔗 Einbetten</a>
-  </div>
-
   <footer>Tool entwickelt von <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a></footer>
-</div>
-
-<!-- Embed Overlay -->
-<div id="overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999">
-  <div style="background:#fff;padding:20px;border-radius:12px;max-width:700px;width:92%;box-shadow:0 8px 30px rgba(0,0,0,0.2)">
-    <h3>Einbettungscode</h3>
-    <textarea readonly id="embedCode" style="width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px"></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button onclick="closeOverlay()" style="background:#0071e3;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer">Schließen</button>
-      <button onclick="copyEmbed()" style="background:#0a84ff;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer">Code kopieren</button>
-    </div>
-  </div>
 </div>
 
 <script>
 function fmt(num){if(!isFinite(num))return"–";return num.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function updateNet(){const g=+revenueGross.value||0;revenueNet.value=g?fmt(g/1.19)+" €":""}
 let base=null;
+
 function calcBase(){
  const gross=+revenueGross.value||0,net=gross/1.19,prod=+productionCost.value||0,ship=+shippingCost.value||0,
  crPct=+conversionRate.value||0,cr=crPct/100,roas=+roas.value||0,budget=+budget.value||0,fixed=+fixedCosts.value||0;
- const totalRevenue=budget*roas,orders=gross?totalRevenue/gross:0,visitors=cr>0?orders/cr:0;
- const profitPerOrder=net-prod-ship,totalProfit=orders*profitPerOrder-budget-fixed;
+
+ const totalRevenue=budget*roas;
+ const orders=gross?totalRevenue/gross:0;
+ const visitors=cr>0?orders/cr:0;
+ const profitPerOrder=net-prod-ship;
+ const totalProfit=orders*profitPerOrder-budget-fixed;
+
  base={gross,net,prod,ship,cr,crPct,roas,budget,fixed,totalRevenue,orders,visitors,profitPerOrder,totalProfit};
- totalRevenueEl.textContent=fmt(totalRevenue)+" €";
- totalProfit.textContent=fmt(totalProfit)+" €";
- visitorsDisplay.textContent="Berechnete Besucher: "+fmt(visitors);
- results.style.display="block";scenarioSection.style.display="block";
- const recSlider=sliderReceipt,crSlider=sliderCr;
- recSlider.min=gross*0.5;recSlider.max=gross*1.5;recSlider.value=gross;receiptValue.textContent="Aktuell: "+fmt(gross)+" €";
- crSlider.min=Math.max(0,crPct*0.5);crSlider.max=crPct*1.5;crSlider.value=crPct;crValue.textContent="Aktuell: "+fmt(crPct)+" %";
- updateScenario()
+
+ document.getElementById("totalRevenue").textContent=fmt(totalRevenue)+" €";
+ document.getElementById("totalProfit").textContent=fmt(totalProfit)+" €";
+ document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+fmt(visitors);
+
+ document.getElementById("results").style.display="block";
+ document.getElementById("scenarioSection").style.display="block";
+
+ const recSlider=document.getElementById("sliderReceipt");
+ const crSlider=document.getElementById("sliderCr");
+ recSlider.min=gross*0.5;recSlider.max=gross*1.5;recSlider.value=gross;
+ crSlider.min=Math.max(0,crPct*0.5);crSlider.max=crPct*1.5;crSlider.value=crPct;
+ document.getElementById("receiptValue").textContent="Aktuell: "+fmt(gross)+" €";
+ document.getElementById("crValue").textContent="Aktuell: "+fmt(crPct)+" %";
+
+ updateScenario();
 }
-function resetSlider(id){const el=document.getElementById(id);if(!base)return;if(id=="sliderReceipt")el.value=base.gross;else el.value=base.crPct;updateScenario()}
+
+function resetSlider(id){
+ if(!base)return;
+ const el=document.getElementById(id);
+ if(id=="sliderReceipt")el.value=base.gross;else el.value=base.crPct;
+ updateScenario();
+}
+
 function updateScenario(){
  if(!base)return;
- const newGross=+sliderReceipt.value||0,newCrPct=+sliderCr.value||0,newCr=newCrPct/100;
- receiptValue.textContent="Neuer Kassenzettel: "+fmt(newGross)+" €";
- crValue.textContent="Neue CR: "+fmt(newCrPct)+" %";
- const newProd=base.prod*(newGross/(base.gross||1)),vis=base.visitors,newOrders=vis*newCr,
- newRevenue=newOrders*newGross,newNet=newGross/1.19,profitPer=newNet-newProd-base.ship,
- newProfit=newOrders*profitPer-base.budget-base.fixed,newRoas=base.budget>0?newRevenue/base.budget:0;
- newRevenueEl.textContent=fmt(newRevenue)+" €";
- newProfitEl.textContent=fmt(newProfit)+" €";
- deltaDisplay.textContent="Δ Gewinn vs Ist: "+fmt(newProfit-base.totalProfit)+" €";
- newRoasDisplay.textContent="Neuer ROAS: "+fmt(newRoas);
- newProfitEl.style.color=newProfit<0?"#d70015":"#0071e3"
+ const newGross=+document.getElementById("sliderReceipt").value||0;
+ const newCrPct=+document.getElementById("sliderCr").value||0;
+ const newCr=newCrPct/100;
+
+ document.getElementById("receiptValue").textContent="Neuer Kassenzettel: "+fmt(newGross)+" €";
+ document.getElementById("crValue").textContent="Neue CR: "+fmt(newCrPct)+" %";
+
+ const newProd=base.prod*(newGross/(base.gross||1));
+ const vis=base.visitors;
+ const newOrders=vis*newCr;
+ const newRevenue=newOrders*newGross;
+ const newNet=newGross/1.19;
+ const profitPer=newNet-newProd-base.ship;
+ const newProfit=newOrders*profitPer-base.budget-base.fixed;
+ const newRoas=base.budget>0?newRevenue/base.budget:0;
+
+ document.getElementById("newRevenue").textContent=fmt(newRevenue)+" €";
+ document.getElementById("newProfit").textContent=fmt(newProfit)+" €";
+ document.getElementById("deltaDisplay").textContent="Δ Gewinn vs Ist: "+fmt(newProfit-base.totalProfit)+" €";
+ document.getElementById("newRoasDisplay").textContent="Neuer ROAS: "+fmt(newRoas);
+
+ document.getElementById("newProfit").style.color=newProfit<0?"#d70015":"#0071e3";
 }
-// Embed
-embedLink.addEventListener("click",e=>{
- e.preventDefault();
- const origin=location.origin;
- const iframe=`<iframe src="${origin}/szenario-simulator" width="100%" height="900" style="border:none"></iframe>`;
- embedCode.value=iframe;overlay.style.display="flex";
-});
-function closeOverlay(){overlay.style.display="none"}
-function copyEmbed(){embedCode.select();document.execCommand("copy");alert("Embed-Code kopiert")}
+
 updateNet();
 </script>
+
 </body>
 </html>
