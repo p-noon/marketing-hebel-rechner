@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketing Hebel Rechner</title>
+<title>Szenario-Simulator</title>
 <style>
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
   background: #f4f4f6;
   padding: 20px;
 }
-.calculator {
+.simulator {
   max-width: 950px;
   margin: 40px auto;
   background: #fff;
@@ -45,7 +45,7 @@ label {
   margin-bottom: 6px;
   margin-top: 12px;
 }
-input, input[type=range] {
+input {
   padding: 10px;
   border: 1px solid #d2d2d7;
   border-radius: 10px;
@@ -60,11 +60,6 @@ input:focus {
   border-color: #0071e3;
   background: white;
   box-shadow: 0 0 0 2px rgba(0,113,227,0.1);
-}
-.info {
-  font-size: 0.85rem;
-  color: #0071e3;
-  margin-top: 6px;
 }
 .button-main {
   margin-top: 30px;
@@ -89,7 +84,7 @@ input:focus {
 }
 .result-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 .result-card {
@@ -105,141 +100,168 @@ input:focus {
   margin: 6px 0;
   font-size: 1.8rem;
 }
-.overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
+.slider-section {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
 }
-.overlay-content {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+.slider-container {
+  margin: 20px 0;
 }
-.overlay-content textarea {
+input[type=range] {
   width: 100%;
-  height: 120px;
-  font-family: monospace;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  padding: 8px;
 }
-.close-btn {
-  background: #0071e3;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  margin-top: 12px;
-  cursor: pointer;
+footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: #999;
 }
-.close-btn:hover {
-  background: #0a84ff;
+footer a {
+  color: #0071e3;
+  text-decoration: none;
 }
 </style>
 </head>
 <body>
 
-<div class="calculator">
-  <h2>Kampagnen-Ertrags-Rechner</h2>
-  <p class="subtitle">Berechne, wie viel Gewinn deine Kampagne nach Budget, ROAS und Conversion erzielt.</p>
+<div class="simulator">
+  <h2>Szenario-Simulator</h2>
+  <p class="subtitle">Simuliere, wie sich dein Gewinn verändert, wenn du Kassenzettel oder Conversion Rate anpasst.</p>
 
   <div class="input-grid">
     <div class="column">
       <h3>Grunddaten</h3>
-      <label>Bruttoumsatz pro Bestellung (EUR)</label>
-      <input id="revenueGross" type="number" placeholder="z. B. 60" step="0.01" oninput="updateNetto()">
-      <label>Netto-Umsatz (automatisch)</label>
+      <label>Bruttoumsatz pro Bestellung (in €)</label>
+      <input id="revenueGross" type="number" placeholder="z. B. 60" step="0.01" oninput="updateNet()">
+      <label>Nettoumsatz (berechnet)</label>
       <input id="revenueNet" type="text" readonly style="background:#f0f0f0;">
-      <label>Herstellungskosten pro Bestellung (EUR)</label>
-      <input id="cost" type="number" placeholder="z. B. 20" step="0.01" oninput="updateNetto()">
-      <label>Verpackung & Versand (EUR)</label>
-      <input id="shipping" type="number" placeholder="z. B. 10" step="0.01" oninput="updateNetto()">
-      <label>Conversion Rate (%)</label>
-      <input id="cr" type="number" placeholder="z. B. 2" step="0.01">
+      <label>Herstellungskosten pro Bestellung (in €)</label>
+      <input id="productionCost" type="number" placeholder="z. B. 20" step="0.01">
+      <label>Verpackung & Versand (in €)</label>
+      <input id="shippingCost" type="number" placeholder="z. B. 5" step="0.01">
     </div>
+
     <div class="column">
-      <h3>Kampagnen-Daten</h3>
+      <h3>Szenario</h3>
+      <label>Conversion Rate (in %)</label>
+      <input id="conversionRate" type="number" placeholder="z. B. 2" step="0.1">
       <label>ROAS</label>
       <input id="roas" type="number" placeholder="z. B. 3" step="0.1">
-      <label>Marketingbudget (EUR)</label>
+      <label>Marketingbudget (in €)</label>
       <input id="budget" type="number" placeholder="z. B. 1000" step="1">
-      <label>Fixkosten extern optional (EUR)</label>
-      <input id="fixed" type="number" placeholder="z. B. 0" step="1">
     </div>
   </div>
 
-  <button class="button-main" onclick="calcCampaign()">Berechnen</button>
+  <button class="button-main" onclick="calcScenario()">Berechnen</button>
 
   <div class="results" id="results">
     <div class="result-grid">
       <div class="result-card highlight">
-        <p><strong>Gesamtertrag / Gewinn</strong></p>
+        <p><strong>Umsatz gesamt</strong></p>
+        <h1 id="totalRevenue">–</h1>
+      </div>
+      <div class="result-card">
+        <p><strong>Gewinn gesamt</strong></p>
         <h1 id="totalProfit">–</h1>
+      </div>
+    </div>
+
+    <div class="slider-section" id="sliderSection" style="display:none;">
+      <h3>Szenario ändern</h3>
+
+      <div class="slider-container">
+        <label>Kassenzettel verändern (%): <span id="receiptChangeLabel">0%</span></label>
+        <input type="range" id="receiptChange" min="-30" max="30" value="0" step="1" oninput="updateScenario()">
+      </div>
+
+      <div class="slider-container">
+        <label>Conversion Rate verändern (%): <span id="crChangeLabel">0%</span></label>
+        <input type="range" id="crChange" min="-30" max="30" value="0" step="1" oninput="updateScenario()">
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <p><strong>Neuer Umsatz</strong></p>
+          <h1 id="newRevenue">–</h1>
+        </div>
+        <div class="result-card">
+          <p><strong>Neuer Gewinn</strong></p>
+          <h1 id="newProfit">–</h1>
+        </div>
       </div>
     </div>
   </div>
 
   <footer>
-    <a href="#" id="embedLink"><strong>🔗 Rechner einbetten / teilen</strong></a> – entwickelt von 
-    <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a>
+    Tool entwickelt von <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a>
   </footer>
 </div>
 
-<!-- Overlay -->
-<div class="overlay" id="overlay">
-  <div class="overlay-content">
-    <h3>Einbettungscode:</h3>
-    <textarea readonly><iframe src="https://p-noon.github.io/campaign-widget" width="100%" height="950" style="border:none;"></iframe></textarea>
-    <button class="close-btn" onclick="closeOverlay()">Schließen</button>
-  </div>
-</div>
-
 <script>
+let base = {};
+
 function formatNumber(num) {
   return num.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function updateNetto(){
+function updateNet() {
   const gross = +document.getElementById("revenueGross").value || 0;
-  const cost = +document.getElementById("cost").value || 0;
-  const shipping = +document.getElementById("shipping").value || 0;
   const net = gross / 1.19;
-  document.getElementById("revenueNet").value = net ? formatNumber(net) + " €" : "";
+  document.getElementById("revenueNet").value = formatNumber(net) + " €";
 }
 
-function calcCampaign() {
+function calcScenario() {
   const gross = +document.getElementById("revenueGross").value || 0;
   const net = gross / 1.19;
-  const cost = +document.getElementById("cost").value || 0;
-  const shipping = +document.getElementById("shipping").value || 0;
-  const cr = (+document.getElementById("cr").value || 0) / 100;
+  const production = +document.getElementById("productionCost").value || 0;
+  const shipping = +document.getElementById("shippingCost").value || 0;
+  const cr = (+document.getElementById("conversionRate").value || 0) / 100;
   const roas = +document.getElementById("roas").value || 0;
   const budget = +document.getElementById("budget").value || 0;
-  const fixed = +document.getElementById("fixed").value || 0;
 
-  const profitPerOrder = net - cost - shipping;
-  let totalProfit = profitPerOrder * (budget * roas / gross) * cr - budget - fixed;
+  const totalRevenue = roas * budget;
+  const avgOrders = totalRevenue / gross; // Anzahl Bestellungen
+  const profitPerOrder = net - production - shipping;
+  const totalProfit = totalRevenue / roas * (roas - 1) * (profitPerOrder / (gross / 1.19));
+
+  base = { gross, net, production, shipping, cr, roas, budget, totalRevenue, totalProfit };
+
+  document.getElementById("totalRevenue").innerText = formatNumber(totalRevenue) + " €";
+  document.getElementById("totalProfit").innerText = formatNumber(totalProfit) + " €";
 
   document.getElementById("results").style.display = "block";
-  document.getElementById("totalProfit").innerText = formatNumber(totalProfit) + " €";
+  document.getElementById("sliderSection").style.display = "block";
 }
 
-// Embed Overlay
-function closeOverlay(){
-  document.getElementById("overlay").style.display = "none";
+function updateScenario() {
+  const receiptChange = +document.getElementById("receiptChange").value;
+  const crChange = +document.getElementById("crChange").value;
+
+  document.getElementById("receiptChangeLabel").innerText = receiptChange + "%";
+  document.getElementById("crChangeLabel").innerText = crChange + "%";
+
+  if (!base.gross) return;
+
+  // Kassenzettel-Anpassung
+  const newGross = base.gross * (1 + receiptChange / 100);
+  const newNet = newGross / 1.19;
+  const newProduction = base.production * (1 + receiptChange / 100);
+  const newShipping = base.shipping;
+
+  // Besucheranzahl aus Ist-CR berechnen
+  const visitors = (base.totalRevenue / base.gross) / base.cr;
+  const newCr = base.cr * (1 + crChange / 100);
+
+  // Neuer Umsatz & Gewinn
+  const newOrders = visitors * newCr;
+  const newRevenue = newOrders * newGross;
+  const profitPerOrder = newNet - newProduction - newShipping;
+  const newProfit = newOrders * profitPerOrder - base.budget;
+
+  document.getElementById("newRevenue").innerText = formatNumber(newRevenue) + " €";
+  document.getElementById("newProfit").innerText = formatNumber(newProfit) + " €";
 }
-document.getElementById("embedLink").addEventListener("click", e => {
-  e.preventDefault();
-  document.getElementById("overlay").style.display = "flex";
-});
 </script>
 
 </body>
