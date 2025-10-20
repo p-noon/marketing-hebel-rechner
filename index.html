@@ -27,7 +27,7 @@
   .delta.negative{color:#d70015}
   .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
   .slider-wrapper{position:relative;margin-top:50px;margin-bottom:40px} 
-  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap}
+  .slider-value{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-weight:700;color:#0071e3;white-space:nowrap;cursor:text}
   input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer}
   footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
   footer a{color:#0071e3;text-decoration:none}
@@ -37,7 +37,7 @@
 
 <div class="simulator">
   <h2>Szenario-Simulator</h2>
-  <p class="subtitle">Simuliere, wie sich Änderungen bei Kassenzettel und Conversion Rate auf Umsatz, Gewinn & ROAS auswirken.</p>
+  <p class="subtitle">Simuliere, wie sich Änderungen bei Kassenzettel und Conversion Rate auf Umsatz & Gewinn auswirken.</p>
 
   <div class="input-grid">
     <div class="column">
@@ -84,10 +84,6 @@
         <p>Gewinn (Ist)</p>
         <h1 id="totalProfit">–</h1>
       </div>
-      <div class="result-card">
-        <p>ROAS (Ist)</p>
-        <h1 id="totalRoas">–</h1>
-      </div>
     </div>
 
     <div class="slider-section" id="scenarioSection">
@@ -95,12 +91,12 @@
 
       <div class="slider-wrapper">
         <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
-        <div id="receiptValue" class="slider-value"></div>
+        <input id="receiptValue" class="slider-value" type="number" style="border:none;background:none;text-align:center;color:#0071e3;font-weight:700;width:70px;">
       </div>
 
       <div class="slider-wrapper">
         <input id="sliderCr" type="range" min="0" max="10" step="0.01">
-        <div id="crValue" class="slider-value"></div>
+        <input id="crValue" class="slider-value" type="number" style="border:none;background:none;text-align:center;color:#0071e3;font-weight:700;width:70px;">
       </div>
 
       <div class="result-grid" style="margin-top:20px">
@@ -150,7 +146,7 @@ function calcBase(){
 
   const totalRevenue=budget*roas;
   const orders=gross?totalRevenue/gross:0;
-  const visitors=cr>0?orders/cr:0;
+  const visitors=cr>0?Math.round(orders/cr):0;
   const profitPerOrder=net-prod-ship;
   const totalProfit=orders*profitPerOrder-budget-fixed;
 
@@ -158,8 +154,7 @@ function calcBase(){
 
   document.getElementById("totalRevenue").textContent=fmt(totalRevenue)+" €";
   document.getElementById("totalProfit").textContent=fmt(totalProfit)+" €";
-  document.getElementById("totalRoas").textContent=fmt(roas);
-  document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+fmt(visitors);
+  document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+visitors;
 
   document.getElementById("results").style.display="block";
   document.getElementById("scenarioSection").style.display="block";
@@ -169,6 +164,9 @@ function calcBase(){
   if(!rec.dataset.initialized){rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.initialized=true;}
   if(!crs.dataset.initialized){crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.initialized=true;}
 
+  document.getElementById("receiptValue").value=gross.toFixed(2);
+  document.getElementById("crValue").value=crPct.toFixed(2);
+
   updateScenario();
 }
 
@@ -176,15 +174,22 @@ function updateScenario(){
   if(!base)return;
   const recSlider=document.getElementById("sliderReceipt");
   const crSlider=document.getElementById("sliderCr");
-  const newGross=+recSlider.value||0;
-  const newCrPct=+crSlider.value||0;
+  const recInput=document.getElementById("receiptValue");
+  const crInput=document.getElementById("crValue");
+
+  let newGross=+recSlider.value;
+  let newCrPct=+crSlider.value;
+
+  // Wenn Eingabe geändert wurde
+  if(document.activeElement===recInput) newGross=+recInput.value;
+  if(document.activeElement===crInput) newCrPct=+crInput.value;
+
+  recSlider.value=newGross;
+  crSlider.value=newCrPct;
+  recInput.value=newGross.toFixed(2);
+  crInput.value=newCrPct.toFixed(2);
+
   const newCr=newCrPct/100;
-
-  const recVal=document.getElementById("receiptValue");
-  const crVal=document.getElementById("crValue");
-
-  recVal.textContent="Neuer Kassenzettel: "+fmt(newGross)+" €";
-  crVal.textContent="Neue CR: "+fmt(newCrPct)+" %";
 
   const newProd=base.prod*(newGross/(base.gross||1));
   const vis=base.visitors;
@@ -218,6 +223,8 @@ function updateScenario(){
 document.getElementById("calcButton").addEventListener("click",calcBase);
 document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
 document.getElementById("sliderCr").addEventListener("input",updateScenario);
+document.getElementById("receiptValue").addEventListener("input",updateScenario);
+document.getElementById("crValue").addEventListener("input",updateScenario);
 document.getElementById("revenueGross").addEventListener("input",updateNet);
 
 // Embed Overlay (wie bisher)
