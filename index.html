@@ -12,7 +12,7 @@ h1{text-align:center;font-size:1.8rem;margin:0 0 8px}
 .input-grid{display:flex;gap:24px;flex-wrap:wrap}
 .column{flex:1;min-width:280px}
 label{display:block;margin-top:12px;margin-bottom:6px;color:#444;font-size:0.95rem}
-input[type="number"],input[readonly],input[type="text"]{width:100%;padding:10px;border-radius:10px;border:1px solid #d2d2d7;background:#f9f9f9;box-sizing:border-box;font-size:1rem;text-align:right}
+input[type="text"],input[type="number"],input[readonly]{width:100%;padding:10px;border-radius:10px;border:1px solid #d2d2d7;background:#f9f9f9;box-sizing:border-box;font-size:1rem}
 input[readonly]{background:#f0f0f0}
 .button-main{margin-top:22px;width:100%;background:#0071e3;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
 .button-main:hover{background:#0a84ff}
@@ -28,22 +28,17 @@ input[readonly]{background:#f0f0f0}
 .slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
 .slider-wrapper{position:relative;margin-top:40px;margin-bottom:40px;text-align:center}
 .slider-label-inline{font-weight:600;color:#0071e3;font-size:1rem}
-.slider-value{display:inline-block;margin-left:6px;font-weight:700;color:#0071e3;white-space:nowrap}
+.slider-value{display:inline-block;margin-left:6px;font-weight:700;color:#0071e3;white-space:nowrap;cursor:pointer}
 input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer;margin-top:8px}
-.reset-btn{position:absolute;right:-10px;top:-14px;font-size:18px;color:#666;cursor:pointer}
-.reset-btn:hover{color:#000}
+.reset-btn{position:absolute;right:4px;top:-4px;cursor:pointer;font-size:18px;color:#0071e3;user-select:none}
 footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
 footer a{color:#0071e3;text-decoration:none}
 footer a:hover{text-decoration:underline}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:999}
-.overlay-content{background:#fff;padding:24px;border-radius:16px;width:90%;max-width:600px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
-.overlay-content textarea{width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px}
-.close-btn{background:#0071e3;color:white;border:none;padding:8px 16px;border-radius:8px;margin-top:12px;cursor:pointer}
-.close-btn:hover{background:#0a84ff}
+
+/* 📱 Mobil: Ergebnisse untereinander */
 @media(max-width:600px){
-  .results{flex-direction:column}
-  .result-card{width:100%}
-  .reset-btn{right:0;top:-12px}
+  .result-grid{grid-template-columns:1fr!important;}
+  .reset-btn{right:0;top:-18px;}
 }
 </style>
 </head>
@@ -59,7 +54,7 @@ footer a:hover{text-decoration:underline}
       <label>Bruttoumsatz pro Bestellung (EUR)</label>
       <input id="revenueGross" type="text" placeholder="z. B. 60">
       <label>Nettoumsatz (automatisch)</label>
-      <input id="revenueNet" readonly>
+      <input id="revenueNet" type="text" readonly>
       <label>Herstellungskosten pro Bestellung (EUR)</label>
       <input id="productionCost" type="text" placeholder="z. B. 20">
       <label>Verpackung & Versand (EUR)</label>
@@ -73,7 +68,7 @@ footer a:hover{text-decoration:underline}
       <label>ROAS</label>
       <input id="roas" type="text" placeholder="z. B. 3">
       <label>Marketingbudget (EUR)</label>
-      <input id="budget" type="text" placeholder="z. B. 1000">
+      <input id="budget" type="text" placeholder="z. B. 1.000">
       <label>Sonstige Fixkosten (EUR)</label>
       <input id="fixedCosts" type="text" placeholder="z. B. 0">
     </div>
@@ -100,14 +95,14 @@ footer a:hover{text-decoration:underline}
       <div class="slider-wrapper">
         <span class="slider-label-inline">Neuer Kassenzettel:</span>
         <span id="receiptValue" class="slider-value"></span>
-        <span class="reset-btn" id="resetReceipt">↻</span>
+        <span class="reset-btn" id="resetReceipt">⟲</span>
         <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
       </div>
 
       <div class="slider-wrapper">
         <span class="slider-label-inline">Neue CR:</span>
         <span id="crValue" class="slider-value"></span>
-        <span class="reset-btn" id="resetCr">↻</span>
+        <span class="reset-btn" id="resetCr">⟲</span>
         <input id="sliderCr" type="range" min="0" max="10" step="0.01">
       </div>
 
@@ -146,9 +141,16 @@ footer a:hover{text-decoration:underline}
 </div>
 
 <script>
-function parseNum(value){if(!value)return 0;return parseFloat(value.replace(/\./g,"").replace(",",".").replace(/[^0-9\.\-]/g,""))||0;}
-function fmt(num){return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}):"–";}
-function updateNet(){const gross=parseNum(document.getElementById("revenueGross").value)||0;document.getElementById("revenueNet").value=gross?fmt(gross/1.19)+" €":"";}
+// ---- Zahlformatierung ----
+function parseNum(v){return parseFloat(v.replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,""))||0;}
+function fmt(num,dec=2){return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"–";}
+
+// ---- Nettoumsatz automatisch ----
+function updateNet(){
+  const gross=parseNum(document.getElementById("revenueGross").value);
+  document.getElementById("revenueNet").value=gross?fmt(gross/1.19,2):"";
+}
+
 let base=null;
 
 function resetScenario(){
@@ -157,82 +159,147 @@ function resetScenario(){
   base=null;
 }
 
+// ---- Berechnung Grunddaten ----
 function calcBase(){
-  const gross=parseNum(document.getElementById("revenueGross").value)||0;
+  const gross=parseNum(revenueGross.value);
   const net=gross/1.19;
-  const prod=parseNum(document.getElementById("productionCost").value)||0;
-  const ship=parseNum(document.getElementById("shippingCost").value)||0;
-  const crPct=parseNum(document.getElementById("conversionRate").value)||0;
+  const prod=parseNum(productionCost.value);
+  const ship=parseNum(shippingCost.value);
+  const crPct=parseNum(conversionRate.value);
   const cr=crPct/100;
-  const roas=parseNum(document.getElementById("roas").value)||0;
-  const budget=parseNum(document.getElementById("budget").value)||0;
-  const fixed=parseNum(document.getElementById("fixedCosts").value)||0;
+  const roas=parseNum(document.getElementById("roas").value);
+  const budget=parseNum(document.getElementById("budget").value);
+  const fixed=parseNum(document.getElementById("fixedCosts").value);
+
   if(!gross||!roas||!budget){alert("Bitte mindestens Kassenzettel, ROAS und Budget eingeben.");return;}
+
   const totalRevenue=budget*roas;
-  const orders=gross?totalRevenue/gross:0;
+  const orders=totalRevenue/gross;
   const visitors=cr>0?orders/cr:0;
   const profitPerOrder=net-prod-ship;
   const totalProfit=orders*profitPerOrder-budget-fixed;
+
   base={gross,net,prod,ship,cr,crPct,roas,budget,fixed,totalRevenue,orders,visitors,profitPerOrder,totalProfit};
-  document.getElementById("totalRevenue").textContent=fmt(totalRevenue)+" €";
-  document.getElementById("totalProfit").textContent=fmt(totalProfit)+" €";
-  document.getElementById("visitorsDisplay").textContent="Berechnete Besucher: "+fmt(visitors);
-  document.getElementById("results").style.display="block";
-  document.getElementById("scenarioSection").style.display="block";
-  const rec=document.getElementById("sliderReceipt");
-  const crs=document.getElementById("sliderCr");
-  rec.min=gross*0.5;rec.max=gross*1.5;rec.value=gross;rec.dataset.center=gross;
-  crs.min=Math.max(0,crPct*0.5);crs.max=crPct*1.5;crs.value=crPct;crs.dataset.center=crPct;
-  document.getElementById("receiptValue").textContent=fmt(gross);
-  document.getElementById("crValue").textContent=fmt(crPct);
+
+  totalRevenueEl.textContent=fmt(totalRevenue,2)+" €";
+  totalProfitEl.textContent=fmt(totalProfit,2)+" €";
+  visitorsDisplay.textContent="Berechnete Besucher: "+fmt(visitors,0);
+
+  results.style.display="block";
+  scenarioSection.style.display="block";
+
+  sliderReceipt.min=gross*0.5;sliderReceipt.max=gross*1.5;sliderReceipt.value=gross;sliderReceipt.dataset.center=gross;
+  sliderCr.min=Math.max(0,crPct*0.5);sliderCr.max=crPct*1.5;sliderCr.value=crPct;sliderCr.dataset.center=crPct;
+
+  receiptValue.textContent=fmt(gross,2);
+  crValue.textContent=fmt(crPct,2);
+
   updateScenario();
 }
 
+// ---- Szenario aktualisieren ----
 function updateScenario(){
   if(!base)return;
-  const recSlider=document.getElementById("sliderReceipt");
-  const crSlider=document.getElementById("sliderCr");
-  const newGross=parseFloat(recSlider.value)||0;
-  const newCrPct=parseFloat(crSlider.value)||0;
+  const newGross=parseFloat(sliderReceipt.value);
+  const newCrPct=parseFloat(sliderCr.value);
   const newCr=newCrPct/100;
-  document.getElementById("receiptValue").textContent=fmt(newGross);
-  document.getElementById("crValue").textContent=fmt(newCrPct);
+
+  receiptValue.textContent=fmt(newGross,2);
+  crValue.textContent=fmt(newCrPct,2);
+
   const newProd=base.prod*(newGross/(base.gross||1));
-  const vis=base.visitors;
-  const newOrders=vis*newCr;
+  const newOrders=base.visitors*newCr;
   const newRevenue=newOrders*newGross;
   const newNet=newGross/1.19;
   const profitPer=newNet-newProd-base.ship;
   const newProfit=newOrders*profitPer-base.budget-base.fixed;
   const newRoas=base.budget>0?newRevenue/base.budget:0;
-  document.getElementById("newRevenue").textContent=fmt(newRevenue)+" €";
-  document.getElementById("newProfit").textContent=fmt(newProfit)+" €";
-  document.getElementById("newRoas").textContent=fmt(newRoas);
-  const delta=(val,base)=>((val-base>=0?"+":"")+fmt(val-base));
-  document.getElementById("deltaRevenue").textContent=delta(newRevenue,base.totalRevenue)+" €";
-  document.getElementById("deltaProfit").textContent=delta(newProfit,base.totalProfit)+" €";
-  document.getElementById("deltaRoas").textContent=delta(newRoas,base.roas);
-  document.getElementById("deltaRevenue").className="delta "+(newRevenue>=base.totalRevenue?"positive":"negative");
-  document.getElementById("deltaProfit").className="delta "+(newProfit>=base.totalProfit?"positive":"negative");
-  document.getElementById("deltaRoas").className="delta "+(newRoas>=base.roas?"positive":"negative");
-  document.getElementById("newProfit").style.color=newProfit<0?"#d70015":"#0071e3";
+
+  newRevenueEl.textContent=fmt(newRevenue,2)+" €";
+  newProfitEl.textContent=fmt(newProfit,2)+" €";
+  newRoasEl.textContent=fmt(newRoas,2);
+
+  const delta=(v,b)=>((v-b>=0?"+":"")+fmt(v-b,2));
+  deltaRevenue.textContent=delta(newRevenue,base.totalRevenue)+" €";
+  deltaProfit.textContent=delta(newProfit,base.totalProfit)+" €";
+  deltaRoas.textContent=delta(newRoas,base.roas);
+  deltaRevenue.className="delta "+(newRevenue>=base.totalRevenue?"positive":"negative");
+  deltaProfit.className="delta "+(newProfit>=base.totalProfit?"positive":"negative");
+  deltaRoas.className="delta "+(newRoas>=base.roas?"positive":"negative");
+
+  newProfitEl.style.color=newProfit<0?"#d70015":"#0071e3";
 }
 
-document.getElementById("calcButton").addEventListener("click",calcBase);
-document.getElementById("sliderReceipt").addEventListener("input",updateScenario);
-document.getElementById("sliderCr").addEventListener("input",updateScenario);
-document.getElementById("resetReceipt").addEventListener("click",()=>{if(base){document.getElementById("sliderReceipt").value=base.gross;updateScenario();}});
-document.getElementById("resetCr").addEventListener("click",()=>{if(base){document.getElementById("sliderCr").value=base.crPct;updateScenario();}});
-document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts').forEach(el=>{
-  el.addEventListener('input',e=>{
-    const v=parseNum(e.target.value);
-    e.target.value=v?fmt(v):"";
-    resetScenario();
+// ---- Klickbare & editierbare Slider-Werte ----
+function makeEditable(span, slider){
+  span.addEventListener("click",()=>{
+    const current=parseNum(span.textContent);
+    const input=document.createElement("input");
+    input.type="text";
+    input.value=fmt(current,2);
+    Object.assign(input.style,{width:"4em",textAlign:"right",border:"none",background:"transparent",color:"#0071e3",fontWeight:"700",outline:"none",fontFamily:"inherit"});
+    span.replaceWith(input);
+    input.focus();input.select();
+
+    const commit=()=>{
+      let val=parseNum(input.value);
+      if(!isFinite(val)) val=current;
+      input.replaceWith(span);
+      slider.value=val;
+      updateScenario();
+    };
+    input.addEventListener("blur",commit);
+    input.addEventListener("keydown",e=>{
+      if(e.key==="Enter")commit();
+      if(e.key==="Escape")input.replaceWith(span);
+    });
   });
-});
-document.getElementById("revenueGross").addEventListener("input",updateNet);
+}
+
+// ---- Events ----
+const revenueGross=document.getElementById("revenueGross");
+const revenueNet=document.getElementById("revenueNet");
+const productionCost=document.getElementById("productionCost");
+const shippingCost=document.getElementById("shippingCost");
+const conversionRate=document.getElementById("conversionRate");
+const totalRevenueEl=document.getElementById("totalRevenue");
+const totalProfitEl=document.getElementById("totalProfit");
+const visitorsDisplay=document.getElementById("visitorsDisplay");
+const sliderReceipt=document.getElementById("sliderReceipt");
+const sliderCr=document.getElementById("sliderCr");
+const receiptValue=document.getElementById("receiptValue");
+const crValue=document.getElementById("crValue");
+const results=document.getElementById("results");
+const scenarioSection=document.getElementById("scenarioSection");
+const newRevenueEl=document.getElementById("newRevenue");
+const newProfitEl=document.getElementById("newProfit");
+const newRoasEl=document.getElementById("newRoas");
+const deltaRevenue=document.getElementById("deltaRevenue");
+const deltaProfit=document.getElementById("deltaProfit");
+const deltaRoas=document.getElementById("deltaRoas");
+
+document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts')
+  .forEach(el=>{
+    el.addEventListener('input',resetScenario);
+    el.addEventListener('blur',()=>{el.value=fmt(parseNum(el.value),2).replace(",00","");});
+  });
+
+document.getElementById("calcButton").addEventListener("click",calcBase);
+sliderReceipt.addEventListener("input",updateScenario);
+sliderCr.addEventListener("input",updateScenario);
+makeEditable(receiptValue,sliderReceipt);
+makeEditable(crValue,sliderCr);
+
+// Reset Buttons
+document.getElementById("resetReceipt").addEventListener("click",()=>{if(sliderReceipt.dataset.center){sliderReceipt.value=sliderReceipt.dataset.center;updateScenario();}});
+document.getElementById("resetCr").addEventListener("click",()=>{if(sliderCr.dataset.center){sliderCr.value=sliderCr.dataset.center;updateScenario();}});
+
+revenueGross.addEventListener("input",updateNet);
+
+// Overlay
 document.getElementById("embedLink").addEventListener("click",e=>{e.preventDefault();document.getElementById("overlay").style.display="flex";});
 document.getElementById("closeOverlay").addEventListener("click",()=>{document.getElementById("overlay").style.display="none";});
 </script>
+
 </body>
 </html>
