@@ -45,9 +45,9 @@ footer a:hover{text-decoration:underline}
   justify-content:center;
   align-items:center;
   z-index:999;
-  padding:20px; /* sorgt für Abstand bei kleinen Screens */
+  padding:20px;
   box-sizing:border-box;
-  overflow:auto; /* scrollt, falls Overlay größer als Viewport */
+  overflow:auto;
 }
 .overlay-content{
   background:#fff;
@@ -55,9 +55,9 @@ footer a:hover{text-decoration:underline}
   border-radius:16px;
   width:100%;
   max-width:600px;
-  max-height:90vh; /* maximal 90% der Höhe */
+  max-height:90vh;
   box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  overflow:auto; /* scrollbar, falls Inhalt zu groß */
+  overflow:auto;
   box-sizing:border-box;
 }
 .overlay-content textarea{
@@ -80,7 +80,7 @@ footer a:hover{text-decoration:underline}
 }
 .close-btn:hover{background:#0a84ff;}
 
-/* 📱 Mobil: Ergebnisse untereinander */
+/* 📱 Mobil */
 @media(max-width:600px){
   .result-grid{grid-template-columns:1fr!important;}
   .reset-btn{right:0;top:-18px;}
@@ -177,7 +177,7 @@ footer a:hover{text-decoration:underline}
   </footer>
 </div>
 
-<!-- Overlay für Einbettungscode -->
+<!-- Overlay -->
 <div class="overlay" id="overlay">
   <div class="overlay-content">
     <h3>Einbettungscode:</h3>
@@ -193,29 +193,29 @@ function fmt(num,dec=2){return isFinite(num)?num.toLocaleString("de-DE",{minimum
 
 // ---- Nettoumsatz automatisch ----
 function updateNet(){
-  const gross=parseNum(document.getElementById("revenueGross").value);
-  document.getElementById("revenueNet").value=gross?fmt(gross/1.19,2):"";
+  const gross=parseNum(revenueGross.value);
+  revenueNet.value=gross?fmt(gross/1.19,2):"";
 }
 
 let base=null;
 
 function resetScenario(){
-  document.getElementById("results").style.display="none";
-  document.getElementById("scenarioSection").style.display="none";
+  results.style.display="none";
+  scenarioSection.style.display="none";
   base=null;
 }
 
-// ---- Berechnung Grunddaten ----
+// ---- Berechnung ----
 function calcBase(){
-  const gross=parseNum(revenueGross.value);
+  const gross=parseNum(revenueGross.value)*100;
   const net=gross/1.19;
-  const prod=parseNum(productionCost.value);
-  const ship=parseNum(shippingCost.value);
+  const prod=parseNum(productionCost.value)*100;
+  const ship=parseNum(shippingCost.value)*100;
   const crPct=parseNum(conversionRate.value);
   const cr=crPct/100;
-  const roas=parseNum(document.getElementById("roas").value);
-  const budget=parseNum(document.getElementById("budget").value);
-  const fixed=parseNum(document.getElementById("fixedCosts").value);
+  const roas=parseNum(roasInput.value);
+  const budget=parseNum(budgetInput.value)*100;
+  const fixed=parseNum(fixedCosts.value)*100;
 
   if(!gross||!roas||!budget){alert("Bitte mindestens Kassenzettel, ROAS und Budget eingeben.");return;}
 
@@ -227,33 +227,42 @@ function calcBase(){
 
   base={gross,net,prod,ship,cr,crPct,roas,budget,fixed,totalRevenue,orders,visitors,profitPerOrder,totalProfit};
 
-  totalRevenueEl.textContent=fmt(totalRevenue,2)+" €";
-  totalProfitEl.textContent=fmt(totalProfit,2)+" €";
+  totalRevenueEl.textContent=fmt(totalRevenue/100,2)+" €";
+  totalProfitEl.textContent=fmt(totalProfit/100,2)+" €";
   visitorsDisplay.textContent="Berechnete Besucher: "+fmt(visitors,0);
 
   results.style.display="block";
   scenarioSection.style.display="block";
 
-  sliderReceipt.min=gross*0.5;sliderReceipt.max=gross*1.5;sliderReceipt.value=gross;sliderReceipt.dataset.center=gross;
-  sliderCr.min=Math.max(0,crPct*0.5);sliderCr.max=crPct*1.5;sliderCr.value=crPct;sliderCr.dataset.center=crPct;
+  // exakte Slider-Werte übernehmen
+  sliderReceipt.min=(gross/100)*0.5;
+  sliderReceipt.max=(gross/100)*1.5;
+  sliderReceipt.value=gross/100;
+  sliderReceipt.dataset.center=gross/100;
 
-  receiptValue.textContent=fmt(gross,2);
+  sliderCr.min=Math.max(0,crPct*0.5);
+  sliderCr.max=crPct*1.5;
+  sliderCr.value=crPct;
+  sliderCr.dataset.center=crPct;
+
+  receiptValue.textContent=fmt(gross/100,2);
   crValue.textContent=fmt(crPct,2);
 
   updateScenario();
 }
 
-// ---- Szenario aktualisieren ----
+// ---- Szenario ----
 function updateScenario(){
   if(!base)return;
-  const newGross=parseFloat(sliderReceipt.value);
+
+  const newGross=parseFloat(sliderReceipt.value)*100;
   const newCrPct=parseFloat(sliderCr.value);
   const newCr=newCrPct/100;
 
-  receiptValue.textContent=fmt(newGross,2);
+  receiptValue.textContent=fmt(newGross/100,2);
   crValue.textContent=fmt(newCrPct,2);
 
-  const newProd=base.prod*(newGross/(base.gross||1));
+  const newProd=base.prod*(newGross/base.gross);
   const newOrders=base.visitors*newCr;
   const newRevenue=newOrders*newGross;
   const newNet=newGross/1.19;
@@ -261,14 +270,15 @@ function updateScenario(){
   const newProfit=newOrders*profitPer-base.budget-base.fixed;
   const newRoas=base.budget>0?newRevenue/base.budget:0;
 
-  newRevenueEl.textContent=fmt(newRevenue,2)+" €";
-  newProfitEl.textContent=fmt(newProfit,2)+" €";
+  newRevenueEl.textContent=fmt(newRevenue/100,2)+" €";
+  newProfitEl.textContent=fmt(newProfit/100,2)+" €";
   newRoasEl.textContent=fmt(newRoas,2);
 
-  const delta=(v,b)=>((v-b>=0?"+":"")+fmt(v-b,2));
+  const delta=(v,b)=>((v-b>=0?"+":"")+fmt((v-b)/100,2));
   deltaRevenue.textContent=delta(newRevenue,base.totalRevenue)+" €";
   deltaProfit.textContent=delta(newProfit,base.totalProfit)+" €";
-  deltaRoas.textContent=delta(newRoas,base.roas);
+  deltaRoas.textContent=((newRoas-base.roas>=0?"+":"")+fmt(newRoas-base.roas,2));
+
   deltaRevenue.className="delta "+(newRevenue>=base.totalRevenue?"positive":"negative");
   deltaProfit.className="delta "+(newProfit>=base.totalProfit?"positive":"negative");
   deltaRoas.className="delta "+(newRoas>=base.roas?"positive":"negative");
@@ -276,7 +286,7 @@ function updateScenario(){
   newProfitEl.style.color=newProfit<0?"#d70015":"#0071e3";
 }
 
-// ---- Klickbare & editierbare Slider-Werte ----
+// ---- Editierbare Slider-Werte ----
 function makeEditable(span, slider){
   span.addEventListener("click",()=>{
     const current=parseNum(span.textContent);
@@ -308,6 +318,10 @@ const revenueNet=document.getElementById("revenueNet");
 const productionCost=document.getElementById("productionCost");
 const shippingCost=document.getElementById("shippingCost");
 const conversionRate=document.getElementById("conversionRate");
+const roasInput=document.getElementById("roas");
+const budgetInput=document.getElementById("budget");
+const fixedCosts=document.getElementById("fixedCosts");
+
 const totalRevenueEl=document.getElementById("totalRevenue");
 const totalProfitEl=document.getElementById("totalProfit");
 const visitorsDisplay=document.getElementById("visitorsDisplay");
@@ -351,6 +365,5 @@ document.getElementById("closeOverlay").addEventListener("click",()=>{
   document.getElementById("overlay").style.display="none";
 });
 </script>
-
 </body>
 </html>
