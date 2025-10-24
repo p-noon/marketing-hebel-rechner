@@ -1,145 +1,139 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kampagnen-Ergebnisprognose</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Marketing-Hebel-Rechner</title>
 <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
-  background: #f4f4f6;
-  padding: 20px;
-}
-.calculator {
-  max-width: 950px;
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  padding: 32px;
-  color: #1c1c1e;
-}
-h2 { text-align: center; font-size: 1.8rem; margin-bottom: 6px; }
-.subtitle { text-align: center; color: #666; margin-bottom: 24px; }
-.input-grid { display: flex; gap: 24px; flex-wrap: wrap; }
-.column { flex: 1; min-width: 280px; }
-label { font-size: 0.9rem; color: #444; display: block; margin-bottom: 6px; margin-top: 12px; }
-input { padding: 10px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 1rem; background: #f9f9f9; width: 100%; box-sizing: border-box; transition: all 0.2s; }
-input:focus { outline: none; border-color: #0071e3; background: white; box-shadow: 0 0 0 2px rgba(0,113,227,0.1); }
-.button-main { margin-top: 30px; width: 100%; background: #0071e3; color: white; font-weight: 600; border: none; border-radius: 14px; padding: 14px; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
-.button-main:hover { background: #0a84ff; }
-.results { margin-top: 30px; text-align: center; display: none; }
-.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.result-card { background: #f5f5f7; padding: 16px; border-radius: 16px; }
-.result-card.highlight { background: #e8f0fe; box-shadow: 0 0 0 2px #0071e3 inset; }
-.result-card h1 { margin: 6px 0; font-size: 1.8rem; }
-.warning { color: #d70015; font-weight: 600; margin-top: 10px; }
-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #999; }
-footer a { color: #0071e3; text-decoration: none; }
-footer a:hover { text-decoration: underline; }
+/* --- UI (unverändert / 1A) --- */
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;background:#f4f4f6;padding:20px}
+.simulator{max-width:950px;margin:40px auto;background:#fff;border-radius:24px;box-shadow:0 8px 20px rgba(0,0,0,0.08);padding:28px;color:#111}
+h1{text-align:center;font-size:1.8rem;margin:0 0 8px}
+.subtitle{text-align:center;color:#666;margin-bottom:22px}
+.input-grid{display:flex;gap:24px;flex-wrap:wrap}
+.column{flex:1;min-width:280px}
+label{display:block;margin-top:12px;margin-bottom:6px;color:#444;font-size:0.95rem}
+input[type="text"],input[type="number"],input[readonly]{width:100%;padding:10px;border-radius:10px;border:1px solid #d2d2d7;background:#f9f9f9;box-sizing:border-box;font-size:1rem}
+input[readonly]{background:#f0f0f0}
+.button-main{margin-top:22px;width:100%;background:#0071e3;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
+.button-main:hover{background:#0a84ff}
+.results{margin-top:26px;display:none}
+.result-grid{display:grid;gap:14px}
+.result-card{background:#f6f7fb;padding:14px;border-radius:12px;text-align:center}
+.result-card h2{margin:8px 0;font-size:1.6rem;color:#0071e3}
+.result-card.alt h2{color:#333}
+.helper{font-size:0.88rem;color:#666;margin-top:8px}
+.delta{font-size:0.85rem;margin-top:4px}
+.delta.positive{color:#0a8f00}
+.delta.negative{color:#d70015}
+.slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
+.slider-wrapper{position:relative;margin-top:40px;margin-bottom:40px;text-align:center}
+.slider-label-inline{font-weight:600;color:#0071e3;font-size:1rem}
+.slider-value{display:inline-block;margin-left:6px;font-weight:700;color:#0071e3;white-space:nowrap;cursor:pointer}
+input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer;margin-top:8px}
+.reset-btn{position:absolute;right:4px;top:-4px;cursor:pointer;font-size:18px;color:#0071e3;user-select:none}
+footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
+footer a{color:#0071e3;text-decoration:none}
+footer a:hover{text-decoration:underline}
 
-/* Overlay Styles */
-.overlay{
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-  padding:20px;
-  box-sizing:border-box;
-  overflow:auto;
-}
-.overlay-content{
-  background:#fff;
-  padding:24px;
-  border-radius:16px;
-  width:100%;
-  max-width:600px;
-  max-height:90vh;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  overflow:auto;
-  box-sizing:border-box;
-}
-.overlay-content textarea{
-  width:100%;
-  height:120px;
-  font-family:monospace;
-  border-radius:8px;
-  border:1px solid #ccc;
-  padding:8px;
-  box-sizing:border-box;
-}
-.close-btn{
-  background:#0071e3;
-  color:white;
-  border:none;
-  padding:8px 16px;
-  border-radius:8px;
-  margin-top:12px;
-  cursor:pointer;
-}
+/* Overlay */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:999;padding:20px;box-sizing:border-box;overflow:auto}
+.overlay-content{background:#fff;padding:24px;border-radius:16px;width:100%;max-width:600px;max-height:90vh;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:auto;box-sizing:border-box}
+.overlay-content textarea{width:100%;height:120px;font-family:monospace;border-radius:8px;border:1px solid #ccc;padding:8px;box-sizing:border-box}
+.close-btn{background:#0071e3;color:white;border:none;padding:8px 16px;border-radius:8px;margin-top:12px;cursor:pointer}
+.close-btn:hover{background:#0a84ff}
 
-/* ✅ Mobile Fix */
-@media (max-width: 600px) {
-  .result-grid {
-    display: flex;
-    flex-direction: column;
-    align-items: center;   /* Zentriert die Kacheln */
-    gap: 10px;
-  }
-  .result-card {
-    width: 90%;            /* gleichmäßiger Abstand links/rechts */
-    max-width: 400px;
-  }
+/* Mobile: Ergebnisse untereinander, zentriert */
+@media(max-width:600px){
+  .result-grid{grid-template-columns:1fr!important}
+  .reset-btn{right:0;top:-18px}
+  .result-card{width:90%;margin-left:auto;margin-right:auto;max-width:400px}
 }
 </style>
 </head>
 <body>
 
-<div class="calculator">
-  <h2>Kampagnen-Ergebnisprognose</h2>
-  <p class="subtitle">Berechne, wie viel Gewinn oder Verlust deine Kampagne bei gegebenem Marketingbudget erzielt.</p>
+<div class="simulator">
+  <h1>Marketing-Hebel-Rechner</h1>
+  <p class="subtitle">Simuliere, wie sich Änderungen bei Kassenzettel und Conversion Rate auf Umsatz, Gewinn &amp; ROAS auswirken.</p>
 
   <div class="input-grid">
     <div class="column">
       <h3>Grunddaten</h3>
-      <label>Bruttoumsatz pro Bestellung (in €)</label>
-      <input id="revenueGross" type="text" placeholder="z. B. 60" oninput="updateNetto()">
-      <label>Netto-Umsatz (automatisch)</label>
-      <input id="revenueNet" type="text" readonly style="background:#f0f0f0;">
-      <label>Variable Kosten (Produktion + Versand, in €)</label>
-      <input id="variableCost" type="text" placeholder="z. B. 30" oninput="updateNetto()">
-      <div id="netProfitInfo" style="font-size:0.85rem;color:#0071e3;margin-top:6px;"></div>
+      <label>Bruttoumsatz pro Bestellung (EUR)</label>
+      <input id="revenueGross" type="text" placeholder="z. B. 60">
+      <label>Nettoumsatz (automatisch)</label>
+      <input id="revenueNet" type="text" readonly>
+      <label>Herstellungskosten pro Bestellung (EUR)</label>
+      <input id="productionCost" type="text" placeholder="z. B. 20">
+      <label>Verpackung &amp; Versand (EUR)</label>
+      <input id="shippingCost" type="text" placeholder="z. B. 5">
     </div>
 
     <div class="column">
-      <h3>Kampagne</h3>
-      <label>Marketingbudget (in €)</label>
-      <input id="marketingBudget" type="text" placeholder="z. B. 1.000">
+      <h3>Kampagnendaten</h3>
+      <label>Conversion Rate (%)</label>
+      <input id="conversionRate" type="text" placeholder="z. B. 2.36">
       <label>ROAS</label>
       <input id="roas" type="text" placeholder="z. B. 3">
-      <label>Einmalige Fixkosten (optional, in €)</label>
-      <input id="fixedCost" type="text" placeholder="z. B. 0">
+      <label>Marketingbudget (EUR)</label>
+      <input id="budget" type="text" placeholder="z. B. 1.000">
+      <label>Sonstige Fixkosten (EUR)</label>
+      <input id="fixedCosts" type="text" placeholder="z. B. 0">
     </div>
   </div>
 
-  <button class="button-main" onclick="calcResult()">Berechnen</button>
+  <button class="button-main" id="calcButton">Berechnen (Ist)</button>
 
   <div class="results" id="results">
-    <div class="result-grid">
-      <div class="result-card highlight">
-        <p><strong>Profit pro Werbe-Euro</strong></p>
-        <h1 id="profitPerEuro">–</h1>
-      </div>
+    <div class="result-grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;">
       <div class="result-card">
-        <p><strong>Gesamtgewinn / -verlust</strong></p>
-        <h1 id="totalProfit">–</h1>
+        <p>Umsatz (Brutto)</p>
+        <h2 id="totalRevenue">–</h2>
+        <div class="helper" id="visitorsDisplay"></div>
+      </div>
+      <div class="result-card alt">
+        <p>Gewinn (Ist)</p>
+        <h2 id="totalProfit">–</h2>
       </div>
     </div>
-    <p id="warning" class="warning"></p>
+
+    <div class="slider-section" id="scenarioSection">
+      <h3>Szenario anpassen</h3>
+
+      <div class="slider-wrapper">
+        <span class="slider-label-inline">Neuer Kassenzettel:</span>
+        <span id="receiptValue" class="slider-value"></span>
+        <span class="reset-btn" id="resetReceipt">⟲</span>
+        <!-- slider works in EUR units for UX; we convert to cents internally -->
+        <input id="sliderReceipt" type="range" min="0" max="200" step="0.01">
+      </div>
+
+      <div class="slider-wrapper">
+        <span class="slider-label-inline">Neue CR (%):</span>
+        <span id="crValue" class="slider-value"></span>
+        <span class="reset-btn" id="resetCr">⟲</span>
+        <input id="sliderCr" type="range" min="0" max="100" step="0.01">
+      </div>
+
+      <div class="result-grid" style="grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px;">
+        <div class="result-card">
+          <p>Neuer Umsatz (Brutto)</p>
+          <h2 id="newRevenue">–</h2>
+          <div id="deltaRevenue" class="delta"></div>
+        </div>
+        <div class="result-card alt">
+          <p>Neuer Gewinn</p>
+          <h2 id="newProfit">–</h2>
+          <div id="deltaProfit" class="delta"></div>
+        </div>
+        <div class="result-card">
+          <p>Neuer ROAS</p>
+          <h2 id="newRoas">–</h2>
+          <div id="deltaRoas" class="delta"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -151,81 +145,294 @@ footer a:hover { text-decoration: underline; }
 <div class="overlay" id="overlay">
   <div class="overlay-content">
     <h3>Einbettungscode:</h3>
-    <textarea readonly><iframe src="DEIN-RECHNER-URL" width="100%" height="950" style="border:none;"></iframe></textarea>
-    <button class="close-btn" onclick="closeOverlay()">Schließen</button>
+    <textarea readonly><iframe src="https://p-noon.github.io/marketing-hebel-rechner/" width="100%" height="950" style="border:none;"></iframe></textarea>
+    <button class="close-btn" id="closeOverlay">Schließen</button>
   </div>
 </div>
 
 <script>
+/* ---------------------------
+   Hilfsfunktionen (Parsing / Format)
+   --------------------------- */
 function parseNum(v){
-  return parseFloat(v.replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,""))||0;
+  if(v===undefined || v===null) return 0;
+  return parseFloat(String(v).replace(/\./g,"").replace(",",".").replace(/[^\d\.\-]/g,""))||0;
 }
-
 function fmt(num,dec=2){
-  return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"–";
+  return isFinite(num)?num.toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec}):'–';
 }
 
-function formatNumber(num){
-  return num.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+/* ---------------------------
+   DOM-Elemente
+   --------------------------- */
+const revenueGross = document.getElementById('revenueGross');
+const revenueNet = document.getElementById('revenueNet');
+const productionCost = document.getElementById('productionCost');
+const shippingCost = document.getElementById('shippingCost');
+const conversionRate = document.getElementById('conversionRate');
+const roasInput = document.getElementById('roas');
+const budgetInput = document.getElementById('budget');
+const fixedCosts = document.getElementById('fixedCosts');
+
+const calcButton = document.getElementById('calcButton');
+const results = document.getElementById('results');
+const scenarioSection = document.getElementById('scenarioSection');
+
+const totalRevenueEl = document.getElementById('totalRevenue');
+const totalProfitEl = document.getElementById('totalProfit');
+const visitorsDisplay = document.getElementById('visitorsDisplay');
+
+const sliderReceipt = document.getElementById('sliderReceipt');
+const sliderCr = document.getElementById('sliderCr');
+const receiptValue = document.getElementById('receiptValue');
+const crValue = document.getElementById('crValue');
+
+const newRevenueEl = document.getElementById('newRevenue');
+const newProfitEl = document.getElementById('newProfit');
+const newRoasEl = document.getElementById('newRoas');
+const deltaRevenue = document.getElementById('deltaRevenue');
+const deltaProfit = document.getElementById('deltaProfit');
+const deltaRoas = document.getElementById('deltaRoas');
+
+const resetReceipt = document.getElementById('resetReceipt');
+const resetCr = document.getElementById('resetCr');
+
+/* ---------------------------
+   Interne Basis (in Cents) — base will hold ints where money is in cents
+   --------------------------- */
+let base = null;
+
+/* ---------------------------
+   Update Netto-Anzeige (visuell) — uses euro inputs
+   --------------------------- */
+function updateNet(){
+  const grossEur = parseNum(revenueGross.value);
+  const grossNet = grossEur ? (grossEur / 1.19) : 0;
+  revenueNet.value = grossEur ? fmt(grossNet,2) : '';
 }
 
-function updateNetto(){
-  const gross = parseNum(document.getElementById("revenueGross").value);
-  const variable = parseNum(document.getElementById("variableCost").value);
-  const net = gross / 1.19;
-  const profit = net - variable;
-  document.getElementById("revenueNet").value = gross ? formatNumber(net) + " €" : "";
-  document.getElementById("netProfitInfo").innerText = gross > 0 ? "Netto-Ertrag pro Bestellung: " + formatNumber(profit) + " €" : "";
+/* ---------------------------
+   Reset scenario visibility
+   --------------------------- */
+function resetScenario(){
+  results.style.display = 'none';
+  scenarioSection.style.display = 'none';
+  base = null;
 }
 
-function calcResult(){
-  const gross = parseNum(document.getElementById("revenueGross").value);
-  const variable = parseNum(document.getElementById("variableCost").value);
-  const roas = parseNum(document.getElementById("roas").value);
-  const fixed = parseNum(document.getElementById("fixedCost").value);
-  const budget = parseNum(document.getElementById("marketingBudget").value);
+/* ---------------------------
+   Calculate base values (on click Berechnen)
+   All internal money values stored as integers = cents
+   --------------------------- */
+function calcBase(){
+  // read inputs (euros or percent)
+  const grossEur = parseNum(revenueGross.value);               // EUR
+  const prodEur = parseNum(productionCost.value);             // EUR
+  const shipEur = parseNum(shippingCost.value);               // EUR
+  const crPct = parseNum(conversionRate.value);               // percent, e.g. 2.36
+  const roas = parseNum(roasInput.value);                     // multiplier, e.g. 3
+  const budgetEur = parseNum(budgetInput.value);              // EUR
+  const fixedEur = parseNum(fixedCosts.value);                // EUR
 
-  const net = gross / 1.19;
-  const profitPerOrder = net - variable;
-  
-  // ✅ korrekt nach deiner Formel:
-  // X = netto - kosten
-  // Y = X / brutto
-  // umsatz = roas * budget
-  // ergebnis = umsatz * Y - budget - fixkosten
-  const X = profitPerOrder;
-  const Y = X / gross;
-  const revenue = roas * budget;
-  const totalProfit = revenue * Y - budget - fixed;
+  // minimal validation
+  if (!grossEur || !roas || !budgetEur) {
+    alert('Bitte mindestens Kassenzettel, ROAS und Budget eingeben.');
+    return;
+  }
 
-  // Ertrag pro Werbe-Euro
-  const profitPerEuro = totalProfit / budget;
+  // convert euros -> cents (integers) for all money values
+  const grossC = Math.round(grossEur * 100);
+  const prodC = Math.round(prodEur * 100);
+  const shipC = Math.round(shipEur * 100);
+  const budgetC = Math.round(budgetEur * 100);
+  const fixedC = Math.round(fixedEur * 100);
 
-  document.getElementById("results").style.display = "block";
-  document.getElementById("profitPerEuro").innerText = formatNumber(profitPerEuro);
-  document.getElementById("totalProfit").innerText = formatNumber(totalProfit) + " €";
-  document.getElementById("warning").innerText = totalProfit < 0 ? "Achtung: Verlust bei dieser Kampagne!" : "";
+  // net per order in cents (use gross in euros -> net in euros -> cents)
+  // compute net euros then to cents to preserve precision:
+  const netEur = grossEur / 1.19;
+  const netC = Math.round(netEur * 100);
+
+  // orders/revenue in cents
+  // totalRevenue = budget * roas  (budget in cents * roas -> cents)
+  const totalRevenueC = Math.round(budgetC * roas); // cents (budgetC * roas)
+  const orders = grossC > 0 ? ( totalRevenueC / grossC ) : 0; // number of orders (float)
+  const visitors = crPct > 0 ? ( orders / (crPct/100) ) : 0; // visitors (float)
+
+  // profit per order in cents
+  const profitPerOrderC = netC - prodC - shipC; // cents
+  // total profit (ist) in cents: orders * profitPerOrderC - budget - fixed
+  const totalProfitC = Math.round(orders * profitPerOrderC) - budgetC - fixedC;
+
+  // save base (all important values)
+  base = {
+    grossC, netC, prodC, shipC,
+    crPct, crDecimal: crPct/100,
+    roas, budgetC, fixedC,
+    totalRevenueC, orders, visitors, profitPerOrderC, totalProfitC
+  };
+
+  // display results (divide cents by 100 for display)
+  totalRevenueEl.textContent = fmt(base.totalRevenueC/100,2) + ' €';
+  totalProfitEl.textContent = fmt(base.totalProfitC/100,2) + ' €';
+  visitorsDisplay.textContent = 'Berechnete Besucher: ' + fmt(base.visitors,0);
+
+  // show UI
+  results.style.display = 'block';
+  scenarioSection.style.display = 'block';
+
+  // set sliders EXACTLY to base values (in EUR for slider UI)
+  const grossEurExact = base.grossC / 100;
+  sliderReceipt.min = +(grossEurExact * 0.5).toFixed(2);
+  sliderReceipt.max = +(grossEurExact * 1.5).toFixed(2);
+  sliderReceipt.step = 0.01;
+  sliderReceipt.value = grossEurExact;
+  sliderReceipt.dataset.center = grossEurExact;
+
+  sliderCr.min = +(Math.max(0, base.crPct * 0.5)).toFixed(2);
+  sliderCr.max = +(base.crPct * 1.5).toFixed(2);
+  sliderCr.step = 0.01;
+  sliderCr.value = +(base.crPct).toFixed(2);
+  sliderCr.dataset.center = +(base.crPct).toFixed(2);
+
+  // show textual slider values
+  receiptValue.textContent = fmt(grossEurExact,2);
+  crValue.textContent = fmt(base.crPct,2);
+
+  // update scenario preview
+  updateScenario();
 }
 
-// Eingaben beim Verlassen formatieren
-['revenueGross','variableCost','marketingBudget','roas','fixedCost'].forEach(id=>{
-  const el=document.getElementById(id);
-  el.addEventListener('blur',()=>{ el.value = fmt(parseNum(el.value)).replace(",00",""); });
-  el.addEventListener('input',updateNetto);
+/* ---------------------------
+   Update scenario when sliders move
+   All internal money arithmetic in cents
+   --------------------------- */
+function updateScenario(){
+  if(!base) return;
+
+  // read slider values (EUR for receipt, percent for CR)
+  const newGrossEur = parseFloat(sliderReceipt.value); // EUR numeric
+  const newGrossC = Math.round(newGrossEur * 100);     // cents int
+
+  const newCrPct = parseFloat(sliderCr.value);         // percent (e.g. 2.36)
+  const newCrDecimal = newCrPct / 100;                 // e.g. 0.0236
+
+  // update textual slider displays (formatted)
+  receiptValue.textContent = fmt(newGrossEur,2);
+  crValue.textContent = fmt(newCrPct,2);
+
+  // compute derived values:
+  // newProd scales with kassenzettel relative to base gross (profit-per-order dependent)
+  const newProdC = Math.round(base.prodC * ( newGrossC / (base.grossC || 1) ));
+
+  // newOrders: visitors * newCr
+  const newOrders = base.visitors * newCrDecimal; // float
+  // newRevenue (cents) = newOrders * newGrossC
+  const newRevenueC = Math.round(newOrders * newGrossC);
+
+  // newNet per order (cents)
+  const newNetC = Math.round((newGrossEur / 1.19) * 100);
+
+  // profit per order (cents) new
+  const profitPerOrderNewC = newNetC - newProdC - base.shipC;
+
+  // newProfit (cents) = newOrders * profitPerOrderNewC - budget - fixed
+  const newProfitC = Math.round(newOrders * profitPerOrderNewC) - base.budgetC - base.fixedC;
+
+  // newRoas = newRevenue / budget  (ratio)
+  const newRoas = base.budgetC > 0 ? ( newRevenueC / base.budgetC ) : 0;
+
+  // write out displays (divide by 100 for euro values)
+  newRevenueEl.textContent = fmt(newRevenueC / 100, 2) + ' €';
+  newProfitEl.textContent = fmt(newProfitC / 100, 2) + ' €';
+  newRoasEl.textContent = fmt(newRoas, 2);
+
+  // deltas (show sign and formatted)
+  const delta = (v, b) => ((v - b >= 0 ? '+' : '') + fmt( Math.abs((v - b) / 100), 2));
+  deltaRevenue.textContent = delta(newRevenueC, base.totalRevenueC) + ' €';
+  deltaProfit.textContent = delta(newProfitC, base.totalProfitC) + ' €';
+  deltaRoas.textContent = ((newRoas - base.roas) >= 0 ? '+' : '') + fmt(newRoas - base.roas, 2);
+
+  // color classes
+  deltaRevenue.className = 'delta ' + ( newRevenueC >= base.totalRevenueC ? 'positive' : 'negative' );
+  deltaProfit.className = 'delta ' + ( newProfitC >= base.totalProfitC ? 'positive' : 'negative' );
+  deltaRoas.className = 'delta ' + ( newRoas >= base.roas ? 'positive' : 'negative' );
+
+  newProfitEl.style.color = newProfitC < 0 ? '#d70015' : '#0071e3';
+}
+
+/* ---------------------------
+   Editable slider labels (click to edit exact value)
+   --------------------------- */
+function makeEditable(span, slider, isPercent=false){
+  span.addEventListener('click', ()=>{
+    const current = parseNum(span.textContent);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = fmt(current,2);
+    Object.assign(input.style, { width: '5em', textAlign: 'right', border: 'none', background: 'transparent', color:'#0071e3', fontWeight:'700', outline:'none', fontFamily:'inherit' });
+    span.replaceWith(input);
+    input.focus(); input.select();
+
+    const commit = () => {
+      let val = parseNum(input.value);
+      if (!isFinite(val)) val = current;
+      input.replaceWith(span);
+      // set slider value (slider works in EUR or percent)
+      slider.value = val;
+      updateScenario();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') commit();
+      if (e.key === 'Escape') input.replaceWith(span);
+    });
+  });
+}
+
+/* ---------------------------
+   Events & wiring
+   --------------------------- */
+// format inputs on blur & reset scenario on change
+document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts')
+  .forEach(el=>{
+    el.addEventListener('input', resetScenario);
+    el.addEventListener('blur', ()=> { el.value = fmt(parseNum(el.value),2).replace(',00',''); });
+  });
+
+// button calculate
+calcButton.addEventListener('click', calcBase);
+
+// sliders
+sliderReceipt.addEventListener('input', updateScenario);
+sliderCr.addEventListener('input', updateScenario);
+
+// editable labels
+makeEditable(receiptValue, sliderReceipt, false);
+makeEditable(crValue, sliderCr, true);
+
+// reset buttons
+resetReceipt.addEventListener('click', ()=> {
+  if (sliderReceipt.dataset.center !== undefined) {
+    sliderReceipt.value = sliderReceipt.dataset.center;
+    updateScenario();
+  }
+});
+resetCr.addEventListener('click', ()=> {
+  if (sliderCr.dataset.center !== undefined) {
+    sliderCr.value = sliderCr.dataset.center;
+    updateScenario();
+  }
 });
 
-// Overlay
-function closeOverlay(){
-  document.getElementById("overlay").style.display = "none";
-}
-document.getElementById("embedLink").addEventListener("click", e => {
-  e.preventDefault();
-  document.getElementById("overlay").style.display = "flex";
-});
+// live update net display when gross changes
+revenueGross.addEventListener('input', updateNet);
 
-// initial
-updateNetto();
+// overlay
+document.getElementById('embedLink').addEventListener('click', e => { e.preventDefault(); document.getElementById('overlay').style.display = 'flex'; });
+document.getElementById('closeOverlay').addEventListener('click', ()=> { document.getElementById('overlay').style.display = 'none'; });
+
+/* initialize */
+updateNet();
 </script>
-
 </body>
 </html>
