@@ -2,38 +2,41 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Marketing-Hebel-Rechner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kampagnen-Ergebnisprognose</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;background:#f4f4f6;padding:20px}
-.simulator{max-width:950px;margin:40px auto;background:#fff;border-radius:24px;box-shadow:0 8px 20px rgba(0,0,0,0.08);padding:28px;color:#111}
-h1{text-align:center;font-size:1.8rem;margin:0 0 8px}
-.subtitle{text-align:center;color:#666;margin-bottom:22px}
-.input-grid{display:flex;gap:24px;flex-wrap:wrap}
-.column{flex:1;min-width:280px}
-label{display:block;margin-top:12px;margin-bottom:6px;color:#444;font-size:0.95rem}
-input[type="text"],input[type="number"],input[readonly]{width:100%;padding:10px;border-radius:10px;border:1px solid #d2d2d7;background:#f9f9f9;box-sizing:border-box;font-size:1rem}
-input[readonly]{background:#f0f0f0}
-.button-main{margin-top:22px;width:100%;background:#0071e3;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
-.button-main:hover{background:#0a84ff}
-.results{margin-top:26px;display:none}
-.result-grid{display:grid;gap:14px}
-.result-card{background:#f6f7fb;padding:14px;border-radius:12px;text-align:center}
-.result-card h2{margin:8px 0;font-size:1.6rem;color:#0071e3}
-.result-card.alt h2{color:#333}
-.helper{font-size:0.88rem;color:#666;margin-top:8px}
-.delta{font-size:0.85rem;margin-top:4px}
-.delta.positive{color:#0a8f00}
-.delta.negative{color:#d70015}
-.slider-section{margin-top:28px;padding-top:18px;border-top:1px solid #e6e6ee;display:none}
-.slider-wrapper{position:relative;margin-top:40px;margin-bottom:40px;text-align:center}
-.slider-label-inline{font-weight:600;color:#0071e3;font-size:1rem}
-.slider-value{display:inline-block;margin-left:6px;font-weight:700;color:#0071e3;white-space:nowrap;cursor:pointer}
-input[type="range"]{width:100%;accent-color:#0071e3;cursor:pointer;margin-top:8px}
-.reset-btn{position:absolute;right:4px;top:-4px;cursor:pointer;font-size:18px;color:#0071e3;user-select:none}
-footer{margin-top:20px;text-align:center;color:#999;font-size:13px}
-footer a{color:#0071e3;text-decoration:none}
-footer a:hover{text-decoration:underline}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+  background: #f4f4f6;
+  padding: 20px;
+}
+.calculator {
+  max-width: 950px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  padding: 32px;
+  color: #1c1c1e;
+}
+h2 { text-align: center; font-size: 1.8rem; margin-bottom: 6px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 24px; }
+.input-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+.column { flex: 1; min-width: 280px; }
+label { font-size: 0.9rem; color: #444; display: block; margin-bottom: 6px; margin-top: 12px; }
+input { padding: 10px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 1rem; background: #f9f9f9; width: 100%; box-sizing: border-box; transition: all 0.2s; }
+input:focus { outline: none; border-color: #0071e3; background: white; box-shadow: 0 0 0 2px rgba(0,113,227,0.1); }
+.button-main { margin-top: 30px; width: 100%; background: #0071e3; color: white; font-weight: 600; border: none; border-radius: 14px; padding: 14px; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
+.button-main:hover { background: #0a84ff; }
+.results { margin-top: 30px; text-align: center; display: none; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.result-card { background: #f5f5f7; padding: 16px; border-radius: 16px; }
+.result-card.highlight { background: #e8f0fe; box-shadow: 0 0 0 2px #0071e3 inset; }
+.result-card h1 { margin: 6px 0; font-size: 1.8rem; }
+.warning { color: #d70015; font-weight: 600; margin-top: 10px; }
+footer { text-align: center; margin-top: 20px; font-size: 13px; color: #999; }
+footer a { color: #0071e3; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
 
 /* Overlay Styles */
 .overlay{
@@ -78,102 +81,69 @@ footer a:hover{text-decoration:underline}
   margin-top:12px;
   cursor:pointer;
 }
-.close-btn:hover{background:#0a84ff;}
 
-/* 📱 Mobil */
-@media(max-width:600px){
-  .result-grid{grid-template-columns:1fr!important;}
-  .reset-btn{right:0;top:-18px;}
+/* ✅ Mobile Fix */
+@media (max-width: 600px) {
+  .result-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;   /* Zentriert die Kacheln */
+    gap: 10px;
+  }
+  .result-card {
+    width: 90%;            /* gleichmäßiger Abstand links/rechts */
+    max-width: 400px;
+  }
 }
 </style>
 </head>
 <body>
 
-<div class="simulator">
-  <h1>Marketing-Hebel-Rechner</h1>
-  <p class="subtitle">Simuliere, wie sich Änderungen bei Kassenzettel und Conversion Rate auf Umsatz, Gewinn & ROAS auswirken.</p>
+<div class="calculator">
+  <h2>Kampagnen-Ergebnisprognose</h2>
+  <p class="subtitle">Berechne, wie viel Gewinn oder Verlust deine Kampagne bei gegebenem Marketingbudget erzielt.</p>
 
   <div class="input-grid">
     <div class="column">
       <h3>Grunddaten</h3>
-      <label>Bruttoumsatz pro Bestellung (EUR)</label>
-      <input id="revenueGross" type="text" placeholder="z. B. 60">
-      <label>Nettoumsatz (automatisch)</label>
-      <input id="revenueNet" type="text" readonly>
-      <label>Herstellungskosten pro Bestellung (EUR)</label>
-      <input id="productionCost" type="text" placeholder="z. B. 20">
-      <label>Verpackung & Versand (EUR)</label>
-      <input id="shippingCost" type="text" placeholder="z. B. 5">
+      <label>Bruttoumsatz pro Bestellung (in €)</label>
+      <input id="revenueGross" type="text" placeholder="z. B. 60" oninput="updateNetto()">
+      <label>Netto-Umsatz (automatisch)</label>
+      <input id="revenueNet" type="text" readonly style="background:#f0f0f0;">
+      <label>Variable Kosten (Produktion + Versand, in €)</label>
+      <input id="variableCost" type="text" placeholder="z. B. 30" oninput="updateNetto()">
+      <div id="netProfitInfo" style="font-size:0.85rem;color:#0071e3;margin-top:6px;"></div>
     </div>
 
     <div class="column">
-      <h3>Kampagnendaten</h3>
-      <label>Conversion Rate (%)</label>
-      <input id="conversionRate" type="text" placeholder="z. B. 2">
+      <h3>Kampagne</h3>
+      <label>Marketingbudget (in €)</label>
+      <input id="marketingBudget" type="text" placeholder="z. B. 1.000">
       <label>ROAS</label>
       <input id="roas" type="text" placeholder="z. B. 3">
-      <label>Marketingbudget (EUR)</label>
-      <input id="budget" type="text" placeholder="z. B. 1.000">
-      <label>Sonstige Fixkosten (EUR)</label>
-      <input id="fixedCosts" type="text" placeholder="z. B. 0">
+      <label>Einmalige Fixkosten (optional, in €)</label>
+      <input id="fixedCost" type="text" placeholder="z. B. 0">
     </div>
   </div>
 
-  <button class="button-main" id="calcButton">Berechnen (Ist)</button>
+  <button class="button-main" onclick="calcResult()">Berechnen</button>
 
   <div class="results" id="results">
-    <div class="result-grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;">
+    <div class="result-grid">
+      <div class="result-card highlight">
+        <p><strong>Profit pro Werbe-Euro</strong></p>
+        <h1 id="profitPerEuro">–</h1>
+      </div>
       <div class="result-card">
-        <p>Umsatz (Brutto)</p>
-        <h2 id="totalRevenue">–</h2>
-        <div class="helper" id="visitorsDisplay"></div>
-      </div>
-      <div class="result-card alt">
-        <p>Gewinn (Ist)</p>
-        <h2 id="totalProfit">–</h2>
+        <p><strong>Gesamtgewinn / -verlust</strong></p>
+        <h1 id="totalProfit">–</h1>
       </div>
     </div>
-
-    <div class="slider-section" id="scenarioSection">
-      <h3>Szenario anpassen</h3>
-
-      <div class="slider-wrapper">
-        <span class="slider-label-inline">Neuer Kassenzettel:</span>
-        <span id="receiptValue" class="slider-value"></span>
-        <span class="reset-btn" id="resetReceipt">⟲</span>
-        <input id="sliderReceipt" type="range" min="0" max="200" step="0.1">
-      </div>
-
-      <div class="slider-wrapper">
-        <span class="slider-label-inline">Neue CR:</span>
-        <span id="crValue" class="slider-value"></span>
-        <span class="reset-btn" id="resetCr">⟲</span>
-        <input id="sliderCr" type="range" min="0" max="10" step="0.01">
-      </div>
-
-      <div class="result-grid" style="grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px;">
-        <div class="result-card">
-          <p>Neuer Umsatz (Brutto)</p>
-          <h2 id="newRevenue">–</h2>
-          <div id="deltaRevenue" class="delta"></div>
-        </div>
-        <div class="result-card alt">
-          <p>Neuer Gewinn</p>
-          <h2 id="newProfit">–</h2>
-          <div id="deltaProfit" class="delta"></div>
-        </div>
-        <div class="result-card">
-          <p>Neuer ROAS</p>
-          <h2 id="newRoas">–</h2>
-          <div id="deltaRoas" class="delta"></div>
-        </div>
-      </div>
-    </div>
+    <p id="warning" class="warning"></p>
   </div>
 
   <footer>
-    <a href="#" id="embedLink"><strong>🔗 Rechner einbetten / teilen</strong></a> – entwickelt von 
-    <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a>
+    <a href="#" id="embedLink"><strong>🔗 Rechner einbetten / teilen</strong></a> – entwickelt von <a href="https://www.purple-noon.de" target="_blank">Purple Noon</a>
   </footer>
 </div>
 
@@ -181,189 +151,81 @@ footer a:hover{text-decoration:underline}
 <div class="overlay" id="overlay">
   <div class="overlay-content">
     <h3>Einbettungscode:</h3>
-    <textarea readonly><iframe src="https://p-noon.github.io/marketing-hebel-rechner/" width="100%" height="950" style="border:none;"></iframe></textarea>
-    <button class="close-btn" id="closeOverlay">Schließen</button>
+    <textarea readonly><iframe src="DEIN-RECHNER-URL" width="100%" height="950" style="border:none;"></iframe></textarea>
+    <button class="close-btn" onclick="closeOverlay()">Schließen</button>
   </div>
 </div>
 
 <script>
-// ---- Zahlformatierung ----
-function parseNum(v){return parseFloat(v.replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,""))||0;}
-function fmt(num,dec=2){return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"–";}
-
-// ---- Nettoumsatz automatisch ----
-function updateNet(){
-  const gross=parseNum(revenueGross.value);
-  revenueNet.value=gross?fmt(gross/1.19,2):"";
+function parseNum(v){
+  return parseFloat(v.replace(/\./g,"").replace(",",".").replace(/[^\d.-]/g,""))||0;
 }
 
-let base=null;
-
-function resetScenario(){
-  results.style.display="none";
-  scenarioSection.style.display="none";
-  base=null;
+function fmt(num,dec=2){
+  return isFinite(num)?num.toLocaleString("de-DE",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"–";
 }
 
-// ---- Berechnung ----
-function calcBase(){
-  const gross=parseNum(revenueGross.value)*100;
-  const net=gross/1.19;
-  const prod=parseNum(productionCost.value)*100;
-  const ship=parseNum(shippingCost.value)*100;
-  const crPct=parseNum(conversionRate.value);
-  const cr=crPct/100;
-  const roas=parseNum(roasInput.value);
-  const budget=parseNum(budgetInput.value)*100;
-  const fixed=parseNum(fixedCosts.value)*100;
-
-  if(!gross||!roas||!budget){alert("Bitte mindestens Kassenzettel, ROAS und Budget eingeben.");return;}
-
-  const totalRevenue=budget*roas;
-  const orders=totalRevenue/gross;
-  const visitors=cr>0?orders/cr:0;
-  const profitPerOrder=net-prod-ship;
-  const totalProfit=orders*profitPerOrder-budget-fixed;
-
-  base={gross,net,prod,ship,cr,crPct,roas,budget,fixed,totalRevenue,orders,visitors,profitPerOrder,totalProfit};
-
-  totalRevenueEl.textContent=fmt(totalRevenue/100,2)+" €";
-  totalProfitEl.textContent=fmt(totalProfit/100,2)+" €";
-  visitorsDisplay.textContent="Berechnete Besucher: "+fmt(visitors,0);
-
-  results.style.display="block";
-  scenarioSection.style.display="block";
-
-  // exakte Slider-Werte übernehmen
-  sliderReceipt.min=(gross/100)*0.5;
-  sliderReceipt.max=(gross/100)*1.5;
-  sliderReceipt.value=gross/100;
-  sliderReceipt.dataset.center=gross/100;
-
-  sliderCr.min=Math.max(0,crPct*0.5);
-  sliderCr.max=crPct*1.5;
-  sliderCr.value=crPct;
-  sliderCr.dataset.center=crPct;
-
-  receiptValue.textContent=fmt(gross/100,2);
-  crValue.textContent=fmt(crPct,2);
-
-  updateScenario();
+function formatNumber(num){
+  return num.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-// ---- Szenario ----
-function updateScenario(){
-  if(!base)return;
-
-  const newGross=parseFloat(sliderReceipt.value)*100;
-  const newCrPct=parseFloat(sliderCr.value);
-  const newCr=newCrPct/100;
-
-  receiptValue.textContent=fmt(newGross/100,2);
-  crValue.textContent=fmt(newCrPct,2);
-
-  const newProd=base.prod*(newGross/base.gross);
-  const newOrders=base.visitors*newCr;
-  const newRevenue=newOrders*newGross;
-  const newNet=newGross/1.19;
-  const profitPer=newNet-newProd-base.ship;
-  const newProfit=newOrders*profitPer-base.budget-base.fixed;
-  const newRoas=base.budget>0?newRevenue/base.budget:0;
-
-  newRevenueEl.textContent=fmt(newRevenue/100,2)+" €";
-  newProfitEl.textContent=fmt(newProfit/100,2)+" €";
-  newRoasEl.textContent=fmt(newRoas,2);
-
-  const delta=(v,b)=>((v-b>=0?"+":"")+fmt((v-b)/100,2));
-  deltaRevenue.textContent=delta(newRevenue,base.totalRevenue)+" €";
-  deltaProfit.textContent=delta(newProfit,base.totalProfit)+" €";
-  deltaRoas.textContent=((newRoas-base.roas>=0?"+":"")+fmt(newRoas-base.roas,2));
-
-  deltaRevenue.className="delta "+(newRevenue>=base.totalRevenue?"positive":"negative");
-  deltaProfit.className="delta "+(newProfit>=base.totalProfit?"positive":"negative");
-  deltaRoas.className="delta "+(newRoas>=base.roas?"positive":"negative");
-
-  newProfitEl.style.color=newProfit<0?"#d70015":"#0071e3";
+function updateNetto(){
+  const gross = parseNum(document.getElementById("revenueGross").value);
+  const variable = parseNum(document.getElementById("variableCost").value);
+  const net = gross / 1.19;
+  const profit = net - variable;
+  document.getElementById("revenueNet").value = gross ? formatNumber(net) + " €" : "";
+  document.getElementById("netProfitInfo").innerText = gross > 0 ? "Netto-Ertrag pro Bestellung: " + formatNumber(profit) + " €" : "";
 }
 
-// ---- Editierbare Slider-Werte ----
-function makeEditable(span, slider){
-  span.addEventListener("click",()=>{
-    const current=parseNum(span.textContent);
-    const input=document.createElement("input");
-    input.type="text";
-    input.value=fmt(current,2);
-    Object.assign(input.style,{width:"4em",textAlign:"right",border:"none",background:"transparent",color:"#0071e3",fontWeight:"700",outline:"none",fontFamily:"inherit"});
-    span.replaceWith(input);
-    input.focus();input.select();
+function calcResult(){
+  const gross = parseNum(document.getElementById("revenueGross").value);
+  const variable = parseNum(document.getElementById("variableCost").value);
+  const roas = parseNum(document.getElementById("roas").value);
+  const fixed = parseNum(document.getElementById("fixedCost").value);
+  const budget = parseNum(document.getElementById("marketingBudget").value);
 
-    const commit=()=>{
-      let val=parseNum(input.value);
-      if(!isFinite(val)) val=current;
-      input.replaceWith(span);
-      slider.value=val;
-      updateScenario();
-    };
-    input.addEventListener("blur",commit);
-    input.addEventListener("keydown",e=>{
-      if(e.key==="Enter")commit();
-      if(e.key==="Escape")input.replaceWith(span);
-    });
-  });
+  const net = gross / 1.19;
+  const profitPerOrder = net - variable;
+  
+  // ✅ korrekt nach deiner Formel:
+  // X = netto - kosten
+  // Y = X / brutto
+  // umsatz = roas * budget
+  // ergebnis = umsatz * Y - budget - fixkosten
+  const X = profitPerOrder;
+  const Y = X / gross;
+  const revenue = roas * budget;
+  const totalProfit = revenue * Y - budget - fixed;
+
+  // Ertrag pro Werbe-Euro
+  const profitPerEuro = totalProfit / budget;
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("profitPerEuro").innerText = formatNumber(profitPerEuro);
+  document.getElementById("totalProfit").innerText = formatNumber(totalProfit) + " €";
+  document.getElementById("warning").innerText = totalProfit < 0 ? "Achtung: Verlust bei dieser Kampagne!" : "";
 }
 
-// ---- Events ----
-const revenueGross=document.getElementById("revenueGross");
-const revenueNet=document.getElementById("revenueNet");
-const productionCost=document.getElementById("productionCost");
-const shippingCost=document.getElementById("shippingCost");
-const conversionRate=document.getElementById("conversionRate");
-const roasInput=document.getElementById("roas");
-const budgetInput=document.getElementById("budget");
-const fixedCosts=document.getElementById("fixedCosts");
+// Eingaben beim Verlassen formatieren
+['revenueGross','variableCost','marketingBudget','roas','fixedCost'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('blur',()=>{ el.value = fmt(parseNum(el.value)).replace(",00",""); });
+  el.addEventListener('input',updateNetto);
+});
 
-const totalRevenueEl=document.getElementById("totalRevenue");
-const totalProfitEl=document.getElementById("totalProfit");
-const visitorsDisplay=document.getElementById("visitorsDisplay");
-const sliderReceipt=document.getElementById("sliderReceipt");
-const sliderCr=document.getElementById("sliderCr");
-const receiptValue=document.getElementById("receiptValue");
-const crValue=document.getElementById("crValue");
-const results=document.getElementById("results");
-const scenarioSection=document.getElementById("scenarioSection");
-const newRevenueEl=document.getElementById("newRevenue");
-const newProfitEl=document.getElementById("newProfit");
-const newRoasEl=document.getElementById("newRoas");
-const deltaRevenue=document.getElementById("deltaRevenue");
-const deltaProfit=document.getElementById("deltaProfit");
-const deltaRoas=document.getElementById("deltaRoas");
-
-document.querySelectorAll('#revenueGross,#productionCost,#shippingCost,#conversionRate,#roas,#budget,#fixedCosts')
-  .forEach(el=>{
-    el.addEventListener('input',resetScenario);
-    el.addEventListener('blur',()=>{el.value=fmt(parseNum(el.value),2).replace(",00","");});
-  });
-
-document.getElementById("calcButton").addEventListener("click",calcBase);
-sliderReceipt.addEventListener("input",updateScenario);
-sliderCr.addEventListener("input",updateScenario);
-makeEditable(receiptValue,sliderReceipt);
-makeEditable(crValue,sliderCr);
-
-// Reset Buttons
-document.getElementById("resetReceipt").addEventListener("click",()=>{if(sliderReceipt.dataset.center){sliderReceipt.value=sliderReceipt.dataset.center;updateScenario();}});
-document.getElementById("resetCr").addEventListener("click",()=>{if(sliderCr.dataset.center){sliderCr.value=sliderCr.dataset.center;updateScenario();}});
-
-revenueGross.addEventListener("input",updateNet);
-
-// Overlay öffnen / schließen
-document.getElementById("embedLink").addEventListener("click",e=>{
+// Overlay
+function closeOverlay(){
+  document.getElementById("overlay").style.display = "none";
+}
+document.getElementById("embedLink").addEventListener("click", e => {
   e.preventDefault();
-  document.getElementById("overlay").style.display="flex";
+  document.getElementById("overlay").style.display = "flex";
 });
-document.getElementById("closeOverlay").addEventListener("click",()=>{
-  document.getElementById("overlay").style.display="none";
-});
+
+// initial
+updateNetto();
 </script>
+
 </body>
 </html>
